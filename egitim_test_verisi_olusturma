@@ -1,0 +1,71 @@
+## TrainSet TestSet -----------------------------------------------------
+
+
+for (s in 1:4){
+  
+  load(paste0("RObjects/",c,"_df_dummy_SG",s,".rdata"))
+  
+  
+  trainSet <- head(df_dummy, n =round(0.8*dim(df_dummy)[1]))
+  testSet <- tail(df_dummy, n =round(0.2*dim(df_dummy)[1]))
+  save(trainSet, file = paste0("RObjects/",c,"_trainSet_SG",s,"_new.rdata")) 
+  save(testSet, file = paste0("RObjects/",c,"_testSet_SG",s,"_new.rdata")) 
+  summary(trainSet$SIDDET)
+  
+  if(s == 1){
+    trainSet$SIDDET <- recode(trainSet$SIDDET, "Raporlu" = "pos", "Raporsuz" = "neg")
+  }else {
+    if(s == 2){
+      trainSet$SIDDET <- recode(trainSet$SIDDET, "Major" = "pos", "Minor" = "neg")
+    }else {
+      if(s == 3){
+        trainSet$SIDDET <- recode(trainSet$SIDDET, "KayipVar" = "pos", "KayipYok" = "neg")
+      }else {
+        trainSet$SIDDET <- recode(trainSet$SIDDET, "OlumVar" = "pos", "OlumYok" = "neg")
+      }
+    }
+    
+  }
+  summary(trainSet)
+  summary(trainSet$SIDDET)
+  
+  summary(testSet$SIDDET)
+  
+  if(s == 1){
+    testSet$SIDDET <- recode(testSet$SIDDET, "Raporlu" = "pos", "Raporsuz" = "neg")
+  }else {
+    if(s == 2){
+      testSet$SIDDET <- recode(testSet$SIDDET, "Major" = "pos", "Minor" = "neg")
+    }else {
+      if(s == 3){
+        testSet$SIDDET <- recode(testSet$SIDDET, "KayipVar" = "pos", "KayipYok" = "neg")
+      }else {
+        testSet$SIDDET <- recode(testSet$SIDDET, "OlumVar" = "pos", "OlumYok" = "neg")
+      }
+    }
+    
+  }
+  levels <- c("YT_K", "YVY_K", "SIDDET")
+  
+  reduced<-names(trainSet)[!names(trainSet)%in% levels]
+  train_x <- trainSet[,reduced] 
+  selected<-names(trainSet)[names(trainSet)%in% "SIDDET"]
+  train_y <- trainSet[,selected]
+  reduced<-names(testSet)[!names(testSet)%in% levels]
+  test_x <- testSet[,reduced] 
+  selected<-names(testSet)[names(testSet)%in% "SIDDET"]
+  test_y <- testSet[,selected] 
+  
+  train_y <- factor(train_y, levels = c("pos","neg"))
+  test_y <- factor(test_y, levels = c("pos","neg"))
+  
+  save(train_x, file = paste0("RObjects/",c,"_train_x_SG",s,"_new.rdata")) 
+  save(train_y, file = paste0("RObjects/",c,"_train_y_SG",s,"_new.rdata")) 
+  save(test_x, file = paste0("RObjects/",c,"_test_x_SG",s,"_new.rdata")) 
+  save(test_y, file = paste0("RObjects/",c,"_test_y_SG",s,"_new.rdata"))
+  
+  print(s)
+  print(prop.table(table(train_y)))
+  print(prop.table(table(test_y)))
+  
+}
