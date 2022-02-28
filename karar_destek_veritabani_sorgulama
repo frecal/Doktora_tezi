@@ -1,0 +1,58 @@
+load(paste0("RObjects/rComb_SG.csv")) #Bu dosya https://github.com/frecal/doktora_tezi içerisinde bulunmaktadır.
+
+#Kaldıraç değerine göre kural listeleme:
+inspect(subset(rComb, lift > 110))
+
+
+#NACE koduna göre kural listeleme:
+inspect(head(subset(rComb, lhs %pin% "NACE_K.41"),20)) #en fazla 20 adet kural listelenmesi
+
+
+#Birden fazla kombinasyona göre kural listeleme: Örnek: "Küçük(0-6)", "Orta(6-50)", "Büyük(50-2000)", "Dev(>2000)" veya "0-2ay", "2ay-1yil", "1-5yil", ">5yil" seçimlerinin yapılması
+
+Örnekler:
+x <- c("NACE_K.41=1", "SG_SONIS_TEC=0-2ay", "SG_MESLEK_ISCO08_K.39=1", "SIG_SAY=Orta(6-50)")
+xrules<-subset(rComb, subset = lhs %ain% x)
+y <- c("SG_TOP_TEC=>5yil")
+arules<-subset(xrules, subset = lhs %in% y)
+inspect(arules)
+
+x <- c("NACE_K.41=1", "SIG_SAY=Orta(6-50)")
+y <- c("OZELFAA_MAG_K.2=1" , "YARAMAG_K.2=1", "KAZA_MAG_K.2=1")
+arules<-subset(rComb, subset = lhs %pin% y & subset = lhs %ain% x)
+inspect(arules)
+
+x <- c("SIG_SAY=Büyük(50-2000)")
+xrules<-subset(rComb, subset = lhs %ain% x)
+y <- c("NACE_K.")
+arules<-subset(xrules, subset = lhs %pin% y)
+inspect(head(arules,500))
+
+x <- c("SIG_SAY=Büyük(50-2000)", "NACE_K.28=1", "CC_K.1=1", "GENELFAA_K.1=1")
+xrules<-subset(rComb, subset = lhs %ain% x)
+y <- c("OZELFAA_MAG_K.10=1" , "YARAMAG_K.10=1", "KAZA_MAG_K.10=1")
+arules<-subset(xrules, subset = lhs %in% y)
+inspect(arules)
+
+#Listelenen kuralların tablolaştırılması:
+
+arules_df <- DATAFRAME(arules, setStart='', setEnd='', separate = TRUE)
+row.names(arules_df) <- NULL
+write.table(arules_df, file=paste0("RObjects/",c,"_yeni_kaza2.xls"),quote = FALSE, sep = "\t", dec = ",",
+            row.names = FALSE, col.names = TRUE, append = F)
+
+#Listelenen kurallar tablosuna önceki analizlerde bulunan değerlerin eklenmesi:
+RulesToDataframe <- function(rules){
+  df <- DATAFRAME(rules, setStart='', setEnd='', separate = TRUE)
+  row.names(df) <- NULL
+  aux = which(model_table[,'ModelName'] == 'gbm_Base')
+  aux = aux[which(model_table[aux,'SG'] == s)]
+  df$BalACC<-model_table[aux, 'BalancedAcc']
+  df$AUC<-model_table[aux, 'AUC']
+  df$brier<-model_table[aux, 'brier']
+  df$LogLoss<-model_table[aux, 'LogLoss']
+  df$sup<-rules@info[["support"]]
+  df$con<-rules@info[["confidence"]]
+  write.table(df, file=paste0("RObjects/",c,"_subsub_rules_SG",s,".xls"),quote = FALSE, sep = "\t", dec = ",",
+              row.names = FALSE, col.names = TRUE, append = TRUE)
+}
