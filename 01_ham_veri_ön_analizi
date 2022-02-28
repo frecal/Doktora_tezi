@@ -692,4 +692,4 @@ colnames(data_K)
 summary(data_K$GENELFAA_K)
 data_K %>% summarize_all(funs(sum(is.na(.)) / length(.)*100)) #K ve KA larin NA sayisi esitlenmis olmali
 
-save(data_K, file = paste0("RObjects/",c,"data_K_new.rdata"))
+save(data_K, file = paste0("RObjects/",c,"data_K.rdata"))
