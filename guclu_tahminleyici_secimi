@@ -1,0 +1,66 @@
+library(gbm)
+library(data.table)
+
+r <- c('gbm_Base')
+s<- 3
+load(paste0("RObjects/",c,"_model_table.rdata"))
+
+
+for (s in 1:4){
+  
+  if(s == 3){
+    modellist <- c('gbm_Base')
+  }else {
+    modellist <- c('gbm_Base','gbm_down','gbm_smote')
+  }
+  for(r in modellist){
+    
+    load(paste0("RObjects/",c,"_model_",r,"_SG",s,".rdata"))
+    
+    varImp <- varImp(model, scale = FALSE)
+    plot(varImp, top = 20)
+    ggplot(varImp, top = 20)
+    
+    
+    varImp_df <- setDT(varImp$importance, keep.rownames = TRUE)[]
+    varImp_df <- as.data.frame(varImp_df)
+    varImp_df <- varImp_df[order(varImp_df$Overall, decreasing=TRUE),]
+    Overall_sum <-sum(varImp_df$Overall)
+    
+    for (i in 1:nrow(varImp_df)){
+      varImp_df$perc[i] <- (100*varImp_df$Overall[i])/Overall_sum
+    }
+    varImp_df$cumperc[1] <- varImp_df$perc[1]
+    for (i in 2:nrow(varImp_df)){
+      varImp_df$cumperc[i] <- varImp_df$perc[i]+varImp_df$cumperc[i-1]
+    }
+    
+    varImp_df[,"rn"]
+    
+    varImp_df[varImp_df[,"perc"] > 0, ]
+    Varsforrules<-varImp_df[varImp_df[,"perc"] > 0, ]
+    
+    
+    
+    Varsforrules[,"rn"]
+    
+    Varsforrules$Model<-r
+    Varsforrules$SG<-s
+    aux = which(model_table[,'ModelName'] == r)
+    aux = aux[which(model_table[aux,'SG'] == s)]
+    Varsforrules$BalACC<-model_table[aux, 'BalancedAcc']
+    Varsforrules$AUC<-model_table[aux, 'AUC']
+    Varsforrules$Brier<-model_table[aux, 'Brier']
+    Varsforrules$LogLoss<-model_table[aux, 'LogLoss']
+    
+    row.names(Varsforrules) <- NULL
+    save(Varsforrules, file = paste0("RObjects/",c,"_Varsforrules_SG",s,".rdata"))
+    write.table(Varsforrules, file=paste0("RObjects/",c,"_Variablesforrules_SG",s,".xls")
+                ,quote = FALSE, sep = "\t", dec = ",",
+                row.names = FALSE, col.names = TRUE, append = TRUE)
+    
+    indx = which(model_table[,'ModelName'] == r)
+    indx = indx[which(model_table[indx,'SG'] == s)]
+    model_table[indx,'varNum'] <- dim(Varsforrules)[1]
+  }}
+
