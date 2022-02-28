@@ -1,0 +1,646 @@
+# BİRLİKTELİK KURALLARI ÇIKARIMI -----------------------------------------------------
+
+## test_x and train_X for ARM ----------------------------------------------------  
+for (s in 1:4){
+  
+  load(paste0("RObjects/",c,"_bestModel_SG",s,".rdata"))
+  load(paste0("RObjects/",c,"_test_x_SG",s,".rdata"))
+  load(paste0("RObjects/",c,"_test_y_SG",s,".rdata"))
+  load(paste0("RObjects/",c,"_train_x_SG",s,".rdata"))
+  load(paste0("RObjects/",c,"_Varsforrules_SG",s,".rdata"))
+  GoodVars<-Varsforrules[,"rn"]
+  GoodVarsNames<-names(train_x)[names(train_x)%in% GoodVars]
+  train_x_final <- subset(train_x, select= c(GoodVarsNames))
+  colnames(train_x_final)
+  test_x_final <- subset(test_x, select= c(GoodVarsNames, "pos", "obsProb", "brier", "Sbrier", "logloss"))
+  colnames(test_x_final)
+  
+  colnames(train_x_final)
+  colnames(test_x_final)
+  
+  
+  test_x_final$pos <- predict(model, test_x, type = "prob")[,"pos"]
+  test_x_final$obsProb <- as.integer(factor(test_y))-1
+  test_x_final$obsProb <- ifelse(test_x_final$obsProb ==1,0,1)
+  test_x_final$brier <-(test_x_final$pos - test_x_final$obsProb)^2
+  test_x_final$Sbrier <- 1 - (((test_x_final$pos - mean(test_x_final$obsProb))^2) / mean(test_x_final$obsProb) * (1 - mean(test_x_final$obsProb)))
+  test_x_final$logloss <- -1*(test_x_final$obsProb*log(test_x_final$pos)+ ((1-test_x_final$obsProb)*log(1-test_x_final$pos)))
+  
+  train_x_final$pos <- predict(model, train_x, type = "prob")[,"pos"]
+  train_x_final$obsProb <- as.integer(factor(test_y))-1
+  train_x_final$obsProb <- ifelse(train_x_final$obsProb ==1,0,1)
+  train_x_final$brier <-(train_x_final$pos - train_x_final$obsProb)^2
+  train_x_final$Sbrier <- 1 - (((train_x_final$pos - mean(train_x_final$obsProb))^2) / mean(train_x_final$obsProb) * (1 - mean(train_x_final$obsProb)))
+  train_x_final$logloss <- -1*(train_x_final$obsProb*log(train_x_final$pos)+ ((1-train_x_final$obsProb)*log(1-train_x_final$pos)))
+  
+  
+  save(train_x_final, file = paste0("RObjects/",c,"_train_x_final_SG",s,".rdata")) 
+  save(test_x_final, file = paste0("RObjects/",c,"_test_x_final_SG",s,".rdata")) 
+}
+
+
+
+
+## Rules için dataframe oluşturma-----------------------------------------------------
+
+for(s in 1:4){ 
+  
+  load(paste0("RObjects/",c,"_train_x_final_SG",s,".rdata")) 
+  load(paste0("RObjects/",c,"_test_x_final_SG",s,".rdata")) 
+  
+  load(paste0("RObjects/",c,"_trainSet_SG",s,".rdata"))
+  load(paste0("RObjects/",c,"_testSet_SG",s,".rdata"))
+  
+  levels <- c("YT_K", "YVY_K", "SIDDET")
+  extras<-names(trainSet)[names(trainSet)%in% levels]
+  
+  for(i in names(trainSet[,extras])){
+    
+    train_x_final[[i]] <- trainSet[[i]]
+    
+  }
+  
+  
+  
+  extras<-names(testSet)[names(testSet)%in% levels]
+  
+  for(i in names(testSet[,extras])){
+    
+    test_x_final[[i]] <- testSet[[i]]
+    
+  }
+  
+  
+  df_rules <- rbind(train_x_final, test_x_final)
+  
+  
+  summary(df_rules$SIGORTALI_SAYISI)
+  df_rules[["SIG_SAY"]] <- ordered(cut(df_rules[[ "SIGORTALI_SAYISI"]]
+                                       , c(0,6,50,2000,1000000)
+                                       ,labels = c("Küçük(0-6)", "Orta(6-50)", "Büyük(50-2000)", "Dev(>2000)")
+                                       , right = FALSE, include.lowest = FALSE))
+  df_rules <- subset(df_rules, select = -c(SIGORTALI_SAYISI))
+  summary(df_rules$SIG_SAY)
+  
+  summary(df_rules$SG_SONIS_TEC)
+  df_rules[["SG_SONIS_TEC"]] <- ordered(cut(df_rules[[ "SG_SONIS_TEC"]]
+                                            , c(0,60,365,1825,50000)
+                                            ,right = FALSE, include.lowest = FALSE,
+                                            labels = c("0-2ay", "2ay-1yil", "1-5yil", ">5yil")))
+  summary(df_rules$SG_SONIS_TEC)
+  
+  summary(df_rules$SG_TOP_TEC)
+  df_rules[["SG_TOP_TEC"]] <- ordered(cut(df_rules[[ "SG_TOP_TEC"]]
+                                          , c(0,60,365,1825,500000)
+                                          ,right = FALSE, include.lowest = FALSE,
+                                          labels = c("0-2ay", "2ay-1yil", "1-5yil", ">5yil")))
+  summary(df_rules$SG_TOP_TEC)
+  
+  summary(df_rules$SG_YAS)
+  df_rules[["SG_YAS"]] <- ordered(cut(df_rules[[ "SG_YAS"]]
+                                      , c(10,18,25,35,45,80)
+                                      ,right = FALSE, include.lowest = FALSE,
+                                      labels = c("13-18", "18-25", "25-35", "35-50", ">50")))
+  summary(df_rules$SG_YAS)
+  
+  summary(df_rules$SG_UCRETLIZINGUN)
+  
+  df_rules[["SG_UCRETLIZINGUN"]] <- ordered(cut(df_rules[[ "SG_UCRETLIZINGUN"]]
+                                                , c(0,1,15,30,45,366)
+                                                ,right = FALSE, include.lowest = FALSE,
+                                                labels = c("0", "1-15", "15-30", "30-45", ">45")))
+  summary(df_rules$SG_UCRETLIZINGUN)
+  
+  summary(df_rules$CALIS_SURE)
+  
+  df_rules[["CALIS_SURE"]] <- ordered(cut(df_rules[[ "CALIS_SURE"]]
+                                          , c(0,1.1,2.1,4,6,8,24.1)
+                                          ,right = FALSE, include.lowest = FALSE,
+                                          labels = c("0-1", "1-2","2-4","4-6","6-8",">8")))
+  summary(df_rules$CALIS_SURE)
+  
+  
+  
+  save(df_rules, file = paste0("RObjects/",c,"_df_rules_SG",s,".rdata"))
+}
+colnames(df_rules)
+
+s <- 1
+s <- 2
+s <- 3
+s <- 4
+load(paste0("RObjects/",c,"_df_rules_SG",s,".rdata"))
+
+colnames(df_rules)
+summary(df_rules$SIDDET)
+summary(df_rules$brier)
+summary(df_rules$Sbrier)
+summary(df_rules$logloss)
+summary(df_rules$pos)
+
+df_rules <- subset(df_rules, select= -c(Sbrier) )
+df_rules <- subset(df_rules, select= -c(logloss) )
+df_rules <- subset(df_rules, select= -c(obsProb) )
+df_rules <- subset(df_rules, select= -c(pos) )
+df_rules <- subset(df_rules, select= -c(brier) )
+
+
+summary(df_rules$brier)
+hist(df_rules$brier)
+hist(df_rules$pos)
+
+
+df_rules[["LogLoss"]] <- ordered(cut(df_rules[[ "logloss"]]
+                                     , c(0.9112  ,2.0314  ,2.3990  ,2.3952, 2.7577  ,4)
+                                     ,right = FALSE, include.lowest = FALSE,
+                                     labels = c("Min-1C", "1C-Med","Med-Ort","Ort-3C","3C-Maks")))
+summary(df_rules$LogLoss)
+df_rules <- subset(df_rules, select= -c(logloss) )
+
+summary(df_rules$logloss)
+df_rules[["LogLoss"]] <- ordered(cut(df_rules[[ "logloss"]]
+                                     , c(0.7707    ,2.3472  ,2.7969  ,2.7788, 3.2117  ,4.5)
+                                     ,right = FALSE, include.lowest = FALSE,
+                                     labels = c("Min-1C", "1C-Med","Med-Ort","Ort-3C","3C-Maks")))
+summary(df_rules$LogLoss)
+df_rules <- subset(df_rules, select= -c(logloss) )
+
+summary(df_rules$logloss)
+df_rules[["LogLoss"]] <- ordered(cut(df_rules[[ "logloss"]]
+                                     , c(0.0836     ,0.23917  ,0.30686, 0.33526, 0.40335  ,2.4)
+                                     ,right = FALSE, include.lowest = FALSE,
+                                     labels = c("Min-1C", "1C-Med","Med-Ort","Ort-3C","3C-Maks")))
+summary(df_rules$LogLoss)
+df_rules <- subset(df_rules, select= -c(logloss) )
+
+summary(df_rules$logloss)
+df_rules[["LogLoss"]] <- ordered(cut(df_rules[[ "logloss"]]
+                                     , c(1.70     ,3.710  , 4.693, 5.695  ,6.9 )
+                                     ,right = FALSE, include.lowest = FALSE,
+                                     labels = c("Min-1C", "1C-Ort","Ort-3C", "3C-Maks")))
+summary(df_rules$LogLoss)
+df_rules <- subset(df_rules, select= -c(logloss) )
+
+
+
+## DOLAYLI ETKİLİ DEĞİŞKENLERİ İÇEREN KURALLARIN OLUŞTURULMASI-----------------------------------------------------
+
+library(arules)
+library(arulesViz)
+
+s <- 1
+s <- 2
+s <- 3
+s <- 4
+
+
+for (s in 1:4){
+  
+  load(paste0("RObjects/",c,"_df_rules_SG",s,".rdata"))
+  
+  
+  
+  df_rules <- subset(df_rules, select= -c(Sbrier) )
+  df_rules <- subset(df_rules, select= -c(logloss) )
+  df_rules <- subset(df_rules, select= -c(obsProb) )
+  df_rules <- subset(df_rules, select= -c(pos) )
+  df_rules <- subset(df_rules, select= -c(brier) )  
+  
+  
+  
+  summary(df_rules$SIDDET)
+  summary(df_rules$SG_SONIS_TEC)
+  summary(df_rules$SG_YAS)
+  summary(df_rules$SG_TOP_TEC)
+  summary(df_rules$SG_UCRETLIZINGUN)
+  summary(df_rules$CALIS_SURE)
+  summary(df_rules$LogLoss)
+  colnames(df_rules)
+  
+  
+  
+  lhs <- c("CC_K", "NACE_K", "SG_KAZAGERORTAM_K","GENELFAA_K", "OZELFAA_K", "OZELFAA_MAG_K",
+           "KAZA_MAG_K","YARAMAG_K","SG_MESLEK_ISCO08_K")
+  binarylhs <- names( select(df_rules,contains(lhs)))
+  binarylhs
+  
+  
+  rhs <- c("KAZA_IL_K", "OGR_DURUM_K", "SAAT_ARALIK", "KAZA_AY", "KAZA_MEVSIM", "MEDENIHAL_K")
+  binaryrhs<-names( select(df_rules,contains(rhs)))
+  binaryrhs
+  
+  #level <- ifelse(s==2,levels(df_rules$SIDDET)[[1]], levels(df_rules$SIDDET)[[2]])
+  level <- levels(df_rules$SIDDET)[[2]]
+  
+  
+  lhsnames = c(paste0(binarylhs, "=1"),
+               
+               #paste0("YT_K=", unique(df_rules$YT_K)),
+               #paste0("YVY_K=", unique(df_rules$YVY_K)),
+               
+               paste0("SIDDET=", level)
+  )
+  lhsnames
+  
+  
+  rhsnames = c(#paste0(binaryrhs, "=1"),
+    paste0("SIG_SAY=", unique(df_rules$SIG_SAY)),
+    paste0("SG_SONIS_TEC=", unique(df_rules$SG_SONIS_TEC)),
+    paste0("SG_TOP_TEC=", unique(df_rules$SG_TOP_TEC)),
+    paste0("CALIS_SURE=", unique(df_rules$CALIS_SURE)),
+    paste0("SG_YAS=", unique(df_rules$SG_YAS)),
+    paste0("SG_UCRETLIZINGUN=", unique(df_rules$SG_UCRETLIZINGUN))
+  )
+  
+  
+  rhsnames
+  
+  #str(df_rules, list.len=ncol(df_rules))
+  
+  
+  
+  rules <- apriori(df_rules, parameter = list(supp = 0.0001, ## Support (1%)
+                                              conf = 0.1, ## Confidence (30%)
+                                              minlen=5,      ## At least 3 items in rule
+                                              #maxlen=5,        ## At most 5 items in rule
+                                              maxtime=0,
+                                              target = "rules"), 
+                   appearance = list(lhs = c(lhsnames), rhs = rhsnames))
+  
+  save(rules, file = paste0("RObjects/",c,"interesting_rules_apriori_SG",s,".rdata"))
+  
+}
+
+load(paste0("RObjects/",c,"interesting_rules_apriori_SG",s,".rdata"))
+summary(rules)
+
+
+fn_findRules <- function(rules, list){
+  arules<-subset(rules, subset = rhs %in% list)
+  arules.sorted <- sort(arules, by="lift")
+  return (arules)
+}
+
+for (s in 1:4){
+  load(paste0("RObjects/",c,"_df_rules_SG",s,".rdata"))
+  load(paste0("RObjects/",c,"interesting_rules_apriori_SG",s,".rdata"))
+  level <- levels(df_rules$SIDDET)[[2]]
+  s_rules <- subset(rules, lhs %in% paste0("SIDDET=", level))
+  rhslist <- c(binaryrhs, paste0("SIG_SAY=", unique(df_rules$SIG_SAY)),
+               paste0("SG_SONIS_TEC=", unique(df_rules$SG_SONIS_TEC)),
+               paste0("SG_TOP_TEC=", unique(df_rules$SG_TOP_TEC)),
+               paste0("CALIS_SURE=", unique(df_rules$CALIS_SURE)),
+               paste0("SG_YAS=", unique(df_rules$SG_YAS)),
+               paste0("SG_UCRETLIZINGUN=", unique(df_rules$SG_UCRETLIZINGUN)))
+  
+  inspect(head(subset(rules, lift > 1.5),5))
+  #z <- "SIG_SAY=Büyük(50-2000)"
+  
+  for(z in rhslist){
+    
+    sub_rules <-fn_findRules(rules, intersect(itemLabels(rules), z) )
+    sub_rules <- subset(sub_rules, lift > 1.5)
+    save(sub_rules, file = paste0("RObjects/",c,"interesting_rules_sub_rules_SG",s,".rdata"))
+    sub_rules <- head(sort(sub_rules, by="lift"), 5)
+    
+    
+    if(dim(sub_rules@quality["count"])[1]>1)
+    {
+      
+      
+      plot(max_rules_HL, method = "graph",  engine = "htmlwidget")
+      
+      sub_rules_df <- DATAFRAME(sub_rules, setStart='', setEnd='', separate = TRUE)
+      row.names(sub_rules_df) <- NULL
+      
+      load(paste0("RObjects/",c,"_model_table.rdata"))
+      aux = which(model_table[,'ModelName'] == 'gbm_Base')
+      aux = aux[which(model_table[aux,'SG'] == s)]
+      sub_rules_df$BalACC<-model_table[aux, 'BalancedAcc']
+      sub_rules_df$AUC<-model_table[aux, 'AUC']
+      sub_rules_df$brier<-model_table[aux, 'brier']
+      sub_rules_df$LogLoss<-model_table[aux, 'LogLoss']
+      sub_rules_df$sup<-rules@info[["support"]]
+      sub_rules_df$con<-rules@info[["confidence"]]
+      write.table(sub_rules_df, file=paste0("RObjects/",c,"_interesting_rules_SG",s,".xls"),quote = FALSE, sep = "\t", dec = ",",
+                  row.names = FALSE, col.names = TRUE, append = TRUE)
+    }else {next}
+    
+  }
+  
+}
+
+s <- 1
+load(paste0("RObjects/",c,"interesting_rules_apriori_SG",s,".rdata"))
+rules
+s1_sub_rules <- subset(rules, lift > 1.5)
+s1_sub_rules <- subset(s1_sub_rules, lhs %in% paste0("SIDDET=Raporlu"))
+s1_sub_rules
+s <- 2
+load(paste0("RObjects/",c,"interesting_rules_apriori_SG",s,".rdata"))
+rules
+s2_sub_rules <- subset(rules, lift > 1.5)
+s2_sub_rules <- subset(s2_sub_rules, lhs %in% paste0("SIDDET=Major"))
+
+s2_sub_rules
+s <- 3
+load(paste0("RObjects/",c,"interesting_rules_apriori_SG",s,".rdata"))
+rules
+s3_sub_rules <- subset(rules, lift > 1.5)
+s3_sub_rules <- subset(s3_sub_rules, lhs %in% paste0("SIDDET=KayipVar"))
+
+s3_sub_rules
+s <- 4
+load(paste0("RObjects/",c,"interesting_rules_apriori_SG",s,".rdata"))
+rules
+s4_sub_rules <- subset(rules, lift > 1.5)
+s4_sub_rules <- subset(s4_sub_rules, lhs %in% paste0("SIDDET=OlumVar"))
+s4_sub_rules
+
+comb_sub_rules  <- c(s1_sub_rules, s2_sub_rules, s3_sub_rules,
+                     s4_sub_rules) 
+summary(comb_sub_rules)
+inspect(head(subset(comb_sub_rules, lift > 1.5),5))
+
+newacc <- c("NACE_K.8=1",                                                                                           
+            "SG_KAZAGERORTAM_K.2=1", "SG_MESLEK_ISCO08_K.39=1")
+arules<-subset(comb_sub_rules, subset = lhs %ain% newacc)
+inspect(arules)
+
+arules_df <- DATAFRAME(arules, setStart='', setEnd='', separate = TRUE)
+row.names(arules_df) <- NULL
+write.table(arules_df, file=paste0("RObjects/",c,"_yeni_kaza.xls"),quote = FALSE, sep = "\t", dec = ",",
+            row.names = FALSE, col.names = TRUE, append = F)
+
+
+plot(arules, method = "graph", control=list(alpha="1"))
+plot(arules, method="grouped matrix", lhs_label_items= 2)
+
+
+## ŞİDDET VE YARALANMA SONUCU İÇEREN KURALLARIN OLUŞTURULMASI-----------------------------------------------------
+
+
+s <- 1
+s <- 2
+s <- 3
+s <- 4
+
+load(paste0("RObjects/",c,"_model_table.rdata"))
+model_table
+
+for (s in 1:4){
+  
+  
+  load(paste0("RObjects/",c,"_df_rules_SG",s,".rdata"))
+  colnames(df_rules)
+  summary(df_rules$SIDDET)
+  df_rules <- subset(df_rules, select= -c(Sbrier) )
+  df_rules <- subset(df_rules, select= -c(logloss) )
+  df_rules <- subset(df_rules, select= -c(obsProb) )
+  df_rules <- subset(df_rules, select= -c(pos) )
+  df_rules <- subset(df_rules, select= -c(brier) )  
+  
+  
+  
+  lhs <- c("CC_K", "NACE_K", "SG_KAZAGERORTAM_K","GENELFAA_K", "OZELFAA_K", "OZELFAA_MAG_K",
+           "KAZA_MAG_K","YARAMAG_K","SG_MESLEK_ISCO08_K")
+  #"KAZA_IL_K", "OGR_DURUM_K", "SAAT_ARALIK", "KAZA_AY", "KAZA_MEVSIM", "MEDENIHAL_K")
+  binarylhs <- names( select(df_rules,contains(lhs)))
+  binarylhs
+  
+  level <- levels(df_rules$SIDDET)[[2]]
+  
+  lhsnames = c(paste0(binarylhs, "=1"),
+               paste0("SIG_SAY=", unique(df_rules$SIG_SAY)),
+               paste0("SG_SONIS_TEC=", unique(df_rules$SG_SONIS_TEC)),
+               paste0("SG_TOP_TEC=", unique(df_rules$SG_TOP_TEC)),
+               #paste0("CALIS_SURE=", unique(df_rules$CALIS_SURE)),
+               paste0("SG_YAS=", unique(df_rules$SG_YAS)),
+               paste0("SG_UCRETLIZINGUN=", unique(df_rules$SG_UCRETLIZINGUN)))
+  lhsnames
+  
+  
+  rhsnames = c(paste0("SIDDET=", level))
+  rhsnames
+  
+  rules <- apriori(df_rules, parameter = list(supp = 0.0001, ## Support (1%)
+                                              conf = 0.001, ## Confidence (30%)
+                                              minlen=5,      ## At least 3 items in rule
+                                              #maxlen=5,        ## At most 5 items in rule
+                                              maxtime=0,
+                                              target = "rules"), 
+                   appearance = list(lhs = c(lhsnames), rhs = rhsnames))
+  save(rules, file = paste0("RObjects/",c,"main_rules_apriori_SG",s,"_",rhsnames[1],".rdata"))
+  
+  lhsnames = c(paste0(binarylhs, "=1"),
+               paste0("SIG_SAY=", unique(df_rules$SIG_SAY)),
+               paste0("SG_SONIS_TEC=", unique(df_rules$SG_SONIS_TEC)),
+               paste0("SG_TOP_TEC=", unique(df_rules$SG_TOP_TEC)),
+               paste0("CALIS_SURE=", unique(df_rules$CALIS_SURE)),
+               paste0("SG_YAS=", unique(df_rules$SG_YAS)),
+               paste0("SG_UCRETLIZINGUN=", unique(df_rules$SG_UCRETLIZINGUN)),
+               paste0("SIDDET=", level))
+  lhsnames
+  rhsnames = c(paste0("YT_K=", unique(df_rules$YT_K)))
+  rhsnames
+  
+  rules <- apriori(df_rules, parameter = list(supp = 0.0001, ## Support (1%)
+                                              conf = 0.001, ## Confidence (30%)
+                                              minlen=5,      ## At least 3 items in rule
+                                              #maxlen=5,        ## At most 5 items in rule
+                                              maxtime=0,
+                                              target = "rules"), 
+                   appearance = list(lhs = c(lhsnames), rhs = rhsnames))
+  save(rules, file = paste0("RObjects/",c,"main_rules_apriori_SG",s,"_",rhsnames[1],".rdata"))
+  
+  rhsnames = c(paste0("YVY_K=", unique(df_rules$YVY_K)))
+  rhsnames
+  
+  rules <- apriori(df_rules, parameter = list(supp = 0.0001, ## Support (1%)
+                                              conf = 0.001, ## Confidence (30%)
+                                              minlen=5,      ## At least 3 items in rule
+                                              #maxlen=5,        ## At most 5 items in rule
+                                              maxtime=0,
+                                              target = "rules"), 
+                   appearance = list(lhs = c(lhsnames), rhs = rhsnames))
+  save(rules, file = paste0("RObjects/",c,"main_rules_apriori_SG",s,"_",rhsnames[1],".rdata"))
+  
+}
+
+
+summary(rules)
+summary(max_rules_HL)
+inspect(head(max_rules_HL))
+
+load(paste0("RObjects/",c,"main_subrules_apriori_SG",s,"_",x,".rdata"))
+
+
+## Kaldıraç değeri 1.5'dan küçük olanların silinmesi
+
+load(paste0("RObjects/",c,"main_subrules_apriori_rcomb_SG",s,"_",x,".rdata"))
+
+s <- 1 
+s
+x <- "SIDDET=Raporlu"
+load(paste0("RObjects/",c,"main_rules_apriori_SG",s,"_",x,".rdata"))
+summary(rules)
+rules_HL <- subset(rules, lift > 1.5)
+rules_HL
+rules_11 <- rules_HL
+save(rules_HL, file = paste0("RObjects/",c,"main_subrules_apriori_SG",s,"_",x,".rdata"))
+save(rules_11, file = paste0("RObjects/",c,"main_subrules_apriori_rcomb_SG",s,"_",x,".rdata"))
+
+
+x <- "YT_K=1"
+load(paste0("RObjects/",c,"main_rules_apriori_SG",s,"_",x,".rdata"))
+arules<-subset(rules, subset = lhs %in% "SIDDET=Raporlu")
+summary(arules)
+rules_HL <- subset(arules, lift > 1.5)
+rules_HL
+rules_12 <- rules_HL
+save(rules_HL, file = paste0("RObjects/",c,"main_subrules_apriori_SG",s,"_",x,".rdata"))
+save(rules_12, file = paste0("RObjects/",c,"main_subrules_apriori_rcomb_SG",s,"_",x,".rdata"))
+
+x <- "YVY_K=5"
+load(paste0("RObjects/",c,"main_rules_apriori_SG",s,"_",x,".rdata"))
+arules<-subset(rules, subset = lhs %in% "SIDDET=Raporlu")
+summary(arules)
+rules_HL <- subset(arules, lift > 1.5)
+rules_HL
+rules_13 <- rules_HL
+save(rules_HL, file = paste0("RObjects/",c,"main_subrules_apriori_SG",s,"_",x,".rdata"))
+save(rules_13, file = paste0("RObjects/",c,"main_subrules_apriori_rcomb_SG",s,"_",x,".rdata"))
+
+
+s <- 2
+s
+x <- "SIDDET=Major"
+load(paste0("RObjects/",c,"main_rules_apriori_SG",s,"_",x,".rdata"))
+summary(rules)
+rules_HL <- subset(rules, lift > 1.5)
+rules_HL
+rules_21 <- rules_HL
+save(rules_HL, file = paste0("RObjects/",c,"main_subrules_apriori_SG",s,"_",x,".rdata"))
+save(rules_21, file = paste0("RObjects/",c,"main_subrules_apriori_rcomb_SG",s,"_",x,".rdata"))
+
+x <- "YT_K=1"
+s
+load(paste0("RObjects/",c,"main_rules_apriori_SG",s,"_",x,".rdata"))
+arules<-subset(rules, subset = lhs %in% "SIDDET=Major")
+summary(arules)
+rules_HL <- subset(arules, lift > 2)
+rules_HL
+rules_22 <- rules_HL
+save(rules_HL, file = paste0("RObjects/",c,"main_subrules_apriori_SG",s,"_",x,".rdata"))
+save(rules_22, file = paste0("RObjects/",c,"main_subrules_apriori_rcomb_SG",s,"_",x,".rdata"))
+
+x <- "YVY_K=5"
+s
+load(paste0("RObjects/",c,"main_rules_apriori_SG",s,"_",x,".rdata"))
+arules<-subset(rules, subset = lhs %in% "SIDDET=Major")
+summary(arules)
+rules_HL <- subset(arules, lift > 1.5)
+rules_HL
+rules_23 <- rules_HL
+save(rules_HL, file = paste0("RObjects/",c,"main_subrules_apriori_SG",s,"_",x,".rdata"))
+save(rules_23, file = paste0("RObjects/",c,"main_subrules_apriori_rcomb_SG",s,"_",x,".rdata"))
+
+s <- 3
+s
+x <- "SIDDET=KayipVar"
+load(paste0("RObjects/",c,"main_rules_apriori_SG",s,"_",x,".rdata"))
+summary(rules)
+rules_HL <- subset(rules, lift > 1.5)
+rules_HL
+rules_31 <- rules_HL
+save(rules_HL, file = paste0("RObjects/",c,"main_subrules_apriori_SG",s,"_",x,".rdata"))
+save(rules_31, file = paste0("RObjects/",c,"main_subrules_apriori_rcomb_SG",s,"_",x,".rdata"))
+
+
+x <- "YT_K=1"
+load(paste0("RObjects/",c,"main_rules_apriori_SG",s,"_",x,".rdata"))
+arules<-subset(rules, subset = lhs %in% "SIDDET=KayipVar")
+summary(arules)
+rules_HL <- subset(arules, lift > 2)
+rules_HL
+rules_32 <- rules_HL
+save(rules_HL, file = paste0("RObjects/",c,"main_subrules_apriori_SG",s,"_",x,".rdata"))
+save(rules_32, file = paste0("RObjects/",c,"main_subrules_apriori_rcomb_SG",s,"_",x,".rdata"))
+
+x <- "YVY_K=5"
+load(paste0("RObjects/",c,"main_rules_apriori_SG",s,"_",x,".rdata"))
+arules<-subset(rules, subset = lhs %in% "SIDDET=KayipVar")
+summary(arules)
+max_rules <- arules[is.maximal(arules)]
+rules_HL <- subset(max_rules, lift > 2)
+rules_HL
+rules_33 <- rules_HL
+save(rules_HL, file = paste0("RObjects/",c,"main_subrules_apriori_SG",s,"_",x,".rdata"))
+save(rules_33, file = paste0("RObjects/",c,"main_subrules_apriori_rcomb_SG",s,"_",x,".rdata"))
+
+
+s <- 4
+s
+x <- "SIDDET=OlumVar"
+load(paste0("RObjects/",c,"main_rules_apriori_SG",s,"_",x,".rdata"))
+summary(rules)
+rules_HL <- subset(rules, lift > 2)
+rules_HL
+rules_41 <- rules_HL
+save(rules_HL, file = paste0("RObjects/",c,"main_subrules_apriori_SG",s,"_",x,".rdata"))
+save(rules_41, file = paste0("RObjects/",c,"main_subrules_apriori_rcomb_SG",s,"_",x,".rdata"))
+
+x <- "YT_K=1"
+load(paste0("RObjects/",c,"main_rules_apriori_SG",s,"_",x,".rdata"))
+arules<-subset(rules, subset = lhs %in% "SIDDET=OlumVar")
+summary(arules)
+rules_HL <- subset(arules, lift > 2)
+rules_HL
+rules_42 <- rules_HL
+save(rules_HL, file = paste0("RObjects/",c,"main_subrules_apriori_SG",s,"_",x,".rdata"))
+save(rules_42, file = paste0("RObjects/",c,"main_subrules_apriori_rcomb_SG",s,"_",x,".rdata"))
+
+x <- "YVY_K=5"
+load(paste0("RObjects/",c,"main_rules_apriori_SG",s,"_",x,".rdata"))
+arules<-subset(rules, subset = lhs %in% "SIDDET=OlumVar")
+summary(arules)
+rules_HL <- subset(arules, lift > 2)
+rules_HL
+rules_43 <- rules_HL
+save(rules_HL, file = paste0("RObjects/",c,"main_subrules_apriori_SG",s,"_",x,".rdata"))
+save(rules_43, file = paste0("RObjects/",c,"main_subrules_apriori_rcomb_SG",s,"_",x,".rdata"))
+
+rules_11
+rules_12
+rules_13
+rules_21
+rules_22
+rules_23
+rules_31 
+rules_32 
+rules_33
+rules_41 
+rules_42 
+rules_43
+
+
+s <- 1
+x <- "SIDDET=Raporlu"
+s <- 2
+x <- "SIDDET=Major"
+s <- 3
+x <- "SIDDET=KayipVar"
+s <- 4
+x <- "SIDDET=OlumVar"
+x <- "YT_K=1"
+x <- "YVY_K=5"
+
+load(paste0("RObjects/",c,"main_subrules_apriori_rcomb_SG",s,"_",x,".rdata"))
+
+rComb <- c(rules_11, rules_12, rules_13,
+           rules_21, rules_22, rules_23,
+           rules_31, rules_32, rules_33,
+           rules_41, rules_42, rules_43) 
+rComb
+
+save(rComb, file = paste0("RObjects/",c,"_rComb_SG",s,"_",x,".rdata"))
