@@ -1,0 +1,98 @@
+## model seçimi için istatistiksel fark testleri
+
+load(paste0("RObjects/",c,"_model_table.rdata"))
+model_table
+
+x<-subset(model_table, select=c(SG, ModelName, ModelROC, BalancedAcc, AUC, Sens, Prec, F1, F2, Brier, LogLoss, 
+                                TP, TN, varNum))
+print(xtable::xtable(x, type = "latex"), include.rownames=FALSE)
+write.table(x, file=paste0("RObjects/",c,"_SG_performances.xls"),quote = FALSE, sep = "\t", dec = ",",
+            row.names = FALSE, col.names = TRUE)
+
+s <- 1
+s <- 2
+s <- 3
+s <- 4
+
+load(paste0("RObjects/",c,"_train_x_SG",s,".rdata")) 
+load(paste0("RObjects/",c,"_train_y_SG",s,".rdata")) 
+load(paste0("RObjects/",c,"_test_x_SG",s,".rdata")) 
+load(paste0("RObjects/",c,"_test_y_SG",s,".rdata"))
+
+load(paste0("RObjects/",c,"_train_x_final_SG",s,".rdata")) 
+load(paste0("RObjects/",c,"_test_x_final_SG",s,".rdata")) 
+train_x <- train_x_final
+test_x <- test_x_final
+load(paste0("RObjects/",c,"_train_y_SG",s,".rdata"))
+load(paste0("RObjects/",c,"_test_y_SG",s,".rdata"))
+
+load(paste0("RObjects/",c,"_model_gbm_Base_SG",s,".rdata"))
+whichTwoPct <- tolerance(model$results, metric = "ROC", 
+                         tol = 1, maximize = TRUE)  
+model$bestTune <- model$results[whichTwoPct,1:7]
+M_Base <- predict(model, test_x, type = "prob")[,"pos"]
+model.ROC <- roc(M_Base, response=test_y, levels=levels(test_y), direction = ">")
+Thresh <- coords(model.ROC, x = "best", best.method = "closest.topleft")
+M_Base <- as.factor(ifelse(M_Base > as.numeric(Thresh[1]), "pos","neg"))
+M_Base <- factor(M_Base, levels = c("pos","neg"))
+
+load(paste0("RObjects/",c,"_model_gbm_down_SG",s,".rdata"))
+whichTwoPct <- tolerance(model$results, metric = "ROC", 
+                         tol = 1, maximize = TRUE)  
+model$bestTune <- model$results[whichTwoPct,1:7]
+M_down <- predict(model, test_x, type = "prob")[,"pos"]
+model.ROC <- roc(M_down, response=test_y, levels=levels(test_y), direction = ">")
+Thresh <- coords(model.ROC, x = "best", best.method = "closest.topleft")
+M_down <- as.factor(ifelse(M_down > as.numeric(Thresh[1]), "pos","neg"))
+M_down <- factor(M_down, levels = c("pos","neg"))
+
+model <- 'gbm_smote'
+load(paste0("RObjects/",c,"_model_",r,"_SG",s,".rdata"))
+whichTwoPct <- tolerance(model$results, metric = "ROC", 
+                         tol = 1, maximize = TRUE)  
+model$bestTune <- model$results[whichTwoPct,1:7]
+M_smote <- predict(model, test_x, type = "prob")[,"pos"]
+model.ROC <- roc(M_smote, response=test_y, levels=levels(test_y), direction = ">")
+Thresh <- coords(model.ROC, x = "best", best.method = "closest.topleft")
+M_smote <- as.factor(ifelse(M_smote > as.numeric(Thresh[1]), "pos","neg"))
+M_smote <- factor(M_smote, levels = c("pos","neg"))
+
+# PAIRED T TEST
+test_vec <- cbind (M_Base, M_smote)
+test_vec <- cbind (M_Base, M_down)
+test_vec <- cbind (M_smote, M_down)
+test_vec <- cbind (M_final, M_down)
+
+
+test_vec_df <- data.frame(test_vec)
+table(test_vec_df)
+t.test(test_vec_df[,1], test_vec_df[,2], paired =TRUE)
+#p-value = 0.9677
+#From the p value we thus cannot reject the null hypothesis, at the 0.01 level of significance, 
+#that SVM and SGB perform similarly to one another
+
+#we conclude that the effect size is small because it is less than 0.8.
+d= abs(mean( test_vec_df[,1])-mean ( test_vec_df[,2] ) ) / sqrt ( ( var ( test_vec_df[,1] )+var ( test_vec_df[,2] ) ) / 2 )
+d #0.000447637
+
+
+# MCNEMAR TEST
+
+test_df <- data.frame(M_Base, M_down) 
+test_df <- data.frame(M_Base, M_smote) 
+test_df <- data.frame(M_down, M_smote) 
+test_df <- data.frame(M_final, M_down)
+table(test_df)
+
+mcnemar.test(test_df[,1], test_df[,2], correct = TRUE) # null hypothesis can NOT be rejected with a p value of 1
+wilcox.test(test_vec_df[,1], test_vec_df[,2], paired = TRUE) # null hypothesis can NOT be rejected with a p value of 0.9678
+
+## Tercih edilen modelin belirlenmesi ve kaydedilmesi ----------------------------------------------------    
+
+for (s in 1:4){
+  
+  load(paste0("RObjects/",c,"_model_gbm_Base_SG",s,".rdata"))
+  
+  bestModel <- model
+  save(bestModel, file = paste0("RObjects/",c,"_bestModel_SG",s,".rdata"))
+}
