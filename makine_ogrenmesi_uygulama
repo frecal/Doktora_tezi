@@ -1,0 +1,285 @@
+library(caret)
+library(parallel)
+library(doParallel)
+
+load(paste0("RObjects/",c,"_train_x_SG",s,".rdata")) 
+load(paste0("RObjects/",c,"_train_y_SG",s,".rdata")) 
+load(paste0("RObjects/",c,"_test_x_SG",s,".rdata")) 
+load(paste0("RObjects/",c,"_test_y_SG",s,".rdata"))
+summary(train_y)
+seed <- 3456
+#cl <- makeCluster(detectCores())
+#registerDoParallel(cl)
+
+
+load(paste0("RObjects/",c,"_train_x_final_SG",s,".rdata")) 
+load(paste0("RObjects/",c,"_test_x_final_SG",s,".rdata")) 
+
+train_x <- train_x_final
+test_x <- test_x_final
+
+colnames(train_x)
+colnames(test_x)
+
+
+control <- trainControl(method="repeatedcv", # Use cv for cross-validation 
+                        number=10, # Use 10 folds for cross-validation
+                        repeats=5,
+                        classProbs= TRUE, 
+                        summaryFunction = twoClassSummary, #twoClassSummary 
+                        savePredictions = TRUE,
+                        #allowParallel = TRUE,
+                        verboseIter = TRUE)
+## Base model ----------------------------------------------------------------
+gbm_Base <- train(train_x, train_y, 
+                  method = "gbm",
+                  metric = "ROC",
+                  maximize = TRUE,
+                  preProcess = c("nzv","center", "scale"),
+                  trControl = control,
+                  verbose = TRUE)
+
+save(gbm_Base, file = paste0("RObjects/",c,"_gbm_Base_SG",s,".rdata"))
+model <- gbm_Base
+save(model, file = paste0("RObjects/",c,"_model_gbm_Base_SG",s,".rdata"))
+
+#load(paste0("RObjects/",c,"_gbm_Base_SG",s,".rdata"))
+#load(paste0("RObjects/",c,"_model_gbm_Base_SG",s,".rdata"))
+caret::confusionMatrix(predict(gbm_Base, test_x), test_y)
+
+svm_Base <- train(train_x, train_y, 
+                  method="svmLinear", 
+                  metric="ROC", 
+                  maximize = TRUE,
+                  preProcess = c("nzv","center", "scale"),
+                  trControl = control,
+                  verbose = TRUE)
+save(svm_Base, file = paste0("RObjects/",c,"_svm_Base_SG",s,".rdata"))
+
+
+
+## Down sampling ----------------------------------------------------------------
+
+control$sampling <- "down"
+
+gbm_down <- train(train_x, train_y, 
+                  method = "gbm",
+                  metric = "ROC",
+                  maximize = TRUE,
+                  preProcess = c("nzv","center", "scale"),
+                  trControl = control,
+                  verbose = TRUE)
+
+save(gbm_down, file = paste0("RObjects/",c,"_gbm_down_SG",s,".rdata"))
+model <- gbm_down
+save(model, file = paste0("RObjects/",c,"_model_gbm_down_SG",s,".rdata"))
+#load(paste0("RObjects/",c,"_model_gbm_down_SG",s,".rdata"))
+
+confusionMatrix(predict(gbm_down, test_x), test_y)
+summary(train_y)
+summary(test_y)
+
+## SMOTE sampling ----------------------------------------------------------------
+
+control$sampling <- "smote"
+library(DMwR)
+gbm_smote <- train(train_x, train_y, 
+                   method = "gbm",
+                   metric = "ROC",
+                   maximize = TRUE,
+                   preProcess = c("zv","center", "scale"),
+                   trControl = control,
+                   verbose = TRUE)
+
+save(gbm_smote, file = paste0("RObjects/",c,"l_gbm_smote_SG",s,".rdata"))
+model <- gbm_smote
+save(model, file = paste0("RObjects/",c,"_model_gbm_smote_SG",s,".rdata"))
+#load(paste0("RObjects/",c,"_model_gbm_smote_SG",s,".rdata"))
+
+confusionMatrix(predict(gbm_smote, test_x), test_y)
+
+dim(train_x)
+
+## Sonuç Tablosu ----------------------------------------------------------
+
+library(dplyr)
+library(ggplot2)
+
+library(cutpointr)
+
+library(pROC)
+library(PRROC)
+
+library(caret)
+BigSummary <- function (data, lev = NULL, model = NULL) {
+  pr_auc <- try(MLmetrics::PRAUC(data[, lev[2]],
+                                 ifelse(data$obs == lev[2], 1, 0)),
+                silent = TRUE)
+  brscore <- try(mean((data[, lev[2]] - ifelse(data$obs == lev[2], 1, 0)) ^ 2),
+                 silent = TRUE)
+  rocObject <- try(pROC::roc(ifelse(data$obs == lev[2], 1, 0), data[, lev[2]],
+                             direction = "<", quiet = TRUE), silent = TRUE)
+  if (inherits(pr_auc, "try-error")) pr_auc <- NA
+  if (inherits(brscore, "try-error")) brscore <- NA
+  rocAUC <- if (inherits(rocObject, "try-error")) {
+    NA
+  } else {
+    rocObject$auc
+  }
+  tmp <- unlist(e1071::classAgreement(table(data$obs,
+                                            data$pred)))[c("diag", "kappa")]
+  out <- c(Acc = tmp[[1]],
+           Kappa = tmp[[2]],
+           AUCROC = rocAUC,
+           AUCPR = pr_auc,
+           Brier = brscore,
+           Precision = caret:::precision.default(data = data$pred,
+                                                 reference = data$obs,
+                                                 relevant = lev[2]),
+           Recall = caret:::recall.default(data = data$pred,
+                                           reference = data$obs,
+                                           relevant = lev[2]),
+           F = caret:::F_meas.default(data = data$pred, reference = data$obs,
+                                      relevant = lev[2]))
+  out
+}
+
+
+r <- 'gbm_Base'
+s <- 4
+
+load(paste0("RObjects/",c,"_model_table.rdata"))
+
+{ i <- 1
+  
+  model_table <- NULL
+  model_table <- data.frame(SG=c(""), ModelName=c(""), BalType=c(""),Tune=c(""),
+                            ModelROC=c(""), Thresh=c(""),
+                            BalancedAcc=c(""), AUC=c(""), AUCPR=c(""), 
+                            Sens=c(""), Spec=c(""), Prec=c(""), 
+                            Rec=c(""), F1=c(""), F2=c(""), 
+                            Kappa=c(""), TP=c(""), FP=c(""), TotP=c(""), TN=c(""), FN=c(""), TotN=c(""),
+                            LogLoss=c(""),  Brier=c(""),Time=c(""), Prev=c(""), Uncert=c(""),PosMean=c(""), BrierMax=c(""))
+  
+  for (s in 1:4){
+    #if (s == 3){
+    #  next
+    #}
+    
+    if(s == 3){
+      modellist <- c('gbm_Base')
+    }else {
+      modellist <- c('gbm_Base','gbm_down','gbm_smote')
+    }
+    
+    
+    for(r in modellist){
+      
+      
+      
+      load(paste0("RObjects/",c,"_train_x_SG",s,".rdata")) 
+      load(paste0("RObjects/",c,"_test_x_SG",s,".rdata"))
+      
+      load(paste0("RObjects/",c,"_train_y_SG",s,".rdata")) 
+      load(paste0("RObjects/",c,"_test_y_SG",s,".rdata"))
+      
+      
+      
+      
+      load(paste0("RObjects/",c,"_model_",r,"_SG",s,".rdata"))
+      
+      whichTwoPct <- tolerance(model$results, metric = "ROC", 
+                               tol = 1, maximize = TRUE)  
+      model$bestTune <- model$results[whichTwoPct,1:7]
+      
+      pred_result <- NULL
+      pred_result <-  data.frame(obs = test_y)
+      pred_result$pos <- predict(model, test_x, type = "prob")[,"pos"]
+      pred_result$neg <- predict(model, test_x, type = "prob")[,"neg"]
+      pred_result$BasePred <- predict(model, test_x)
+      confusionMatrix(pred_result$BasePred, pred_result$obs)
+      
+      model.ROC <- roc(pred_result$pos, response=test_y, levels = c("neg", "pos"), direction = "<")
+      Thresh_db <- coords(model.ROC, ret = "all", transpose = F)
+      
+      
+      Thresh <- Thresh_db[Thresh_db$youden == max(Thresh_db$youden),1]
+      pred_result$pred <- NULL
+      pred_result$pred <- NA
+      pred_result$pred <- as.factor(ifelse(pred_result$pos > as.numeric(Thresh[1]), "pos","neg"))
+      pred_result$pred <- factor(pred_result$pred, levels = c("pos","neg"))
+      conf <- confusionMatrix(pred_result$pred, pred_result$obs)
+      
+      
+      
+      # ROC Sens Spec
+      #
+      plot_ROC <- plot(model.ROC,main=c(model[["modelInfo"]][["label"]],paste0("SG",s)), print.thres = "best", best.method = "youden")
+      
+      #Precision Recall
+      #
+      
+      plot(precision ~ recall, main=c(model[["modelInfo"]][["label"]],paste0("SG",s)), Thresh_db %>% select(precision, recall), type="l")
+      
+      plot(precision + recall ~ threshold, Thresh_db, type = "l", log="x", 
+           subset = is.finite(threshold) ,main=c(model[["modelInfo"]][["label"]],paste0("SG",s)))     
+      
+      pred_result$obsProb <- as.integer(factor(test_y))-1
+      pred_result$obsProb <- ifelse(pred_result$obsProb ==1,0,1)
+      
+      Threshold <- Thresh_db[Thresh_db$youden == max(Thresh_db$youden),]
+      
+      model_table[i,1] <- s
+      model_table[i,2] <- r
+      model_table[i,3] <- ifelse(is.null(model[["control"]][["sampling"]]), "No Balancing", model[["control"]][["sampling"]])
+      model_table[i,4] <- paste(model[["bestTune"]][1:3], collapse = ";")
+      
+      model_table[i,5] <- round(as.numeric(getTrainPerf(model)[, "TrainROC"]),4)
+      model_table[i,6] <- round(as.numeric(Thresh[1]),4)
+      
+      
+      
+      model_table[i,7] <- round(as.numeric(conf[["byClass"]][["Balanced Accuracy"]]),4)
+      model_table[i,8] <- round(as.numeric(model.ROC$auc),4)
+      model_table[i,9] <- round(as.numeric(BigSummary(pred_result, lev = levels(pred_result$obs), model = model)[[4]]),4)
+      model_table[i,10] <- round(as.numeric(conf[["byClass"]][["Sensitivity"]]),4)
+      model_table[i,11] <- round(as.numeric(conf[["byClass"]][["Specificity"]]),4)
+      model_table[i,12] <- round(as.numeric(conf[["byClass"]][["Precision"]]),4)
+      model_table[i,13] <- round(as.numeric(conf[["byClass"]][["Recall"]]),4)
+      
+      model_table[i,14] <- round(as.numeric(MLmetrics::FBeta_Score(pred_result$obs,pred_result$pred, beta = 1)),4)
+      model_table[i,15] <- round(as.numeric(MLmetrics::FBeta_Score(pred_result$obs,pred_result$pred, beta = 2)),4)
+      model_table[i,16] <- round(as.numeric(conf[["overall"]][["Kappa"]]),4)
+      model_table[i,17] <- conf[["table"]][1,1] #TP
+      model_table[i,18] <- conf[["table"]][2,1] #FP
+      model_table[i,19] <- conf[["table"]][1,1] + conf[["table"]][2,1] 
+      model_table[i,20] <- conf[["table"]][2,2] #TN
+      model_table[i,21] <- conf[["table"]][1,2] #FN
+      model_table[i,22] <- conf[["table"]][1,2] + conf[["table"]][2,2]
+      
+      model_table[i,23] <- round(as.numeric(Metrics::logLoss(pred_result$obsProb, pred_result$pos)),4)
+      model_table[i,24] <- round(as.numeric(ModelMetrics::brier(pred_result$obsProb, pred_result$pos)),4)
+      
+      model_table[i,25] <- round(as.numeric(model[["times"]][["everything"]][["user.self"]]),4)
+      
+      model_table[i,26] <- round(as.numeric((conf[["table"]][1,1] + conf[["table"]][2,1]) /((conf[["table"]][1,1] + conf[["table"]][2,1])+(conf[["table"]][1,2] + conf[["table"]][2,2]))),4)
+      model_table[i,27] <- round(as.numeric(model_table[[i,26]])*(1-as.numeric(model_table[[i,26]])),4)
+      model_table[i,28] <- round(as.numeric(mean(pred_result$pos)),4)
+      model_table[i,29] <- round(as.numeric(mean(pred_result$pos)*(1-mean(pred_result$pos))),4)
+      
+      i<-i+1
+      
+    }
+    
+  }
+  
+  model_table
+  
+  
+  save(model_table, file = paste0("RObjects/",c,"_model_table.rdata"))
+  write.table(model_table, file=paste0("RObjects/",c,"_model_table.xls"),quote = FALSE, sep = "\t", dec = ".",
+              row.names = FALSE, col.names = TRUE, append = TRUE)
+}
+
+model_table
+
