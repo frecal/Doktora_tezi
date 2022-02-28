@@ -1,0 +1,30 @@
+s <- 1 # Raporsuz/Raporlu
+load(paste0("RObjects/",c,"_df_dummy_NZV_new.rdata"))
+df_dummy$SIDDET <- cut(df_dummy$SG_ISGUNUKAYBI, breaks = c(0, 10, 7500), right = TRUE, include.lowest = TRUE) 
+df_dummy$SIDDET <- recode(df_dummy$SIDDET, "[0,10]" = "Raporsuz", "(10,7.5e+03]" = "Raporlu")
+df_dummy <- subset(df_dummy, select= -c(SG_ISGUNUKAYBI))
+save(df_dummy, file = paste0("RObjects/",c,"_df_dummy_SG",s,"_new.rdata")) 
+
+s <- 2 # Raporsuz/Raporlu
+load(paste0("RObjects/",c,"_df_dummy_NZV_new.rdata"))
+df_dummy$SIDDET <- cut(df_dummy$SG_ISGUNUKAYBI, breaks = c(0, 20, 7500), right = TRUE, include.lowest = TRUE) 
+df_dummy$SIDDET <- recode(df_dummy$SIDDET, "[0,20]" = "Minor", "(20,7.5e+03]" = "Major")
+df_dummy <- subset(df_dummy, select= -c(SG_ISGUNUKAYBI))
+save(df_dummy, file = paste0("RObjects/",c,"_df_dummy_SG",s,"_new.rdata")) 
+
+s <- 3 # KayipYok/KayipVar
+load(paste0("RObjects/",c,"_df_dummy_NZV_new.rdata"))
+df_dummy$SIDDET <- cut(df_dummy$SG_ISGUNUKAYBI, breaks = c(0.09, 0, 7500), right = TRUE, include.lowest = TRUE) 
+df_dummy$SIDDET <- recode(df_dummy$SIDDET, "[0,0.09]" = "KayipYok", "(0.09,7.5e+03]" = "KayipVar")
+df_dummy <- subset(df_dummy, select= -c(SG_ISGUNUKAYBI))
+save(df_dummy, file = paste0("RObjects/",c,"_df_dummy_SG",s,"_new.rdata")) 
+
+s <- 4 # OlumYok/OlumVar
+load(paste0("RObjects/",c,"_df_dummy_NZV_new.rdata"))
+df_dummy$SIDDET <- cut(df_dummy$SG_ISGUNUKAYBI, breaks = c(0, 7499.1, 7500), right = TRUE, include.lowest = TRUE) 
+df_dummy$SIDDET <- recode(df_dummy$SIDDET, "(7499,7500]" = "OlumVar", "[0,7499]" = "OlumYok")
+df_dummy <- subset(df_dummy, select= -c(SG_ISGUNUKAYBI))
+save(df_dummy, file = paste0("RObjects/",c,"_df_dummy_SG",s,"_new.rdata")) 
+
+
+df_dummy %>% summarize_all(funs(sum(is.na(.)) / length(.)*100)) #K ve KA larin NA sayisi esitlenmis olmali
