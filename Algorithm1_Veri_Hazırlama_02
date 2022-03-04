@@ -1,4 +1,14 @@
 #FUSUN RECAL DOKTORA TEZİ R KODLARI
+#Algorithm_1 Veri Hazırlama_02
+
+#İşlemler: Kategorik değişkenlerin eksik verisinde K ve KA eşleştirmeleri, kalan eksik verinin yeni bir kategori olarak tanımlanması, çok eksik veri bulunduran satırların silinmesi,
+
+#Girdi: "LC_raw_data.rdata"
+#Çıktı: "LC_data_K.rdata"
+
+#Notlar:
+#SGK'dan alınan veri Kod (K) ve Açıklama (A) olarak iki ayrı değişkenle betimlenmektedir. Ancak bazı eksik veriler ve tutarsızlıklar bulunmkatadır.
+
 
 library(dplyr)
 library(DataExplorer)
@@ -8,11 +18,9 @@ library(MLmetrics)
 library(corrplot)
 library(xtable)
 
-c <- "LC" #Daha önce kaydedilen LC_raw_data.rdata yüklenirken "LC" harfleri bir değişken olarak tanımlanmıştır.
+c <- "LC" #Daha önce kaydedilen LC_raw_data.rdata yüklenirken "LC" harfleri c değişkeni kullanılarak verilmektedir.
 
-## Veriyi yükleme ve filtreleme ----------------------------------------------------------
-
-load(paste0("RObjects/",c,"raw_data.rdata")) #Algorithm1_Veri_Hazırlama_01 sonunda kaydedilen verinin yüklenmesi
+load(paste0("RObjects/",c,"raw_data.rdata")) 
 str(raw_data)
 selected_data <- subset(raw_data, select = c("FAALGRUP_K",
                                              "FAALGRUP_KA",
@@ -91,7 +99,7 @@ introduce(selected_data)
 #LC     rows columns discrete_columns continuous_columns all_missing_columns total_missing_values complete_rows total_observations
 #     870429      61               53                  8                   0              8834712         69719           53096169
 
-## Eksik veri eşleştirme ---------------------------------------------------
+
 
 #CC ve KAZA_GERYERBOLUM eşleştirilmesi
 
@@ -419,6 +427,9 @@ df_KA <- subset(selected_data, select = c("FAALGRUP_KA",
                                           "SG_ISGUNUKAYBI",
                                           "KAZA_ACIKLAMA"))
 
+
+#K ve KA verilerini inceleme ve analiz için daha çok bilgi taşıyan verinin seçimi ---------------------------------
+
 introduce(df_K)
 introduce(df_KA)
 #LC     rows columns discrete_columns continuous_columns all_missing_columns total_missing_values complete_rows total_observations
@@ -480,6 +491,9 @@ dim(df_K[rowSums(!is.na(df_K[names2])) == 3,]) # 355933               üçünün
 dim(df_K[rowSums(!is.na(df_K[names2])) >= 2,]) # 466226               en az ikisinin dolu olması
 dim(df_K[rowSums(!is.na(df_K[names2])) >= 1,]) # 550990               en az birinin dolu olması
 
+
+#Direk ilgili değişkenlerden (names1) en az 4ünün dolu olduğu ve ekipman/materyal (names2) değişkenlerinin en az 3ünün dolu olduğu satırların seçimi  ---------------------------------
+
 data_K <- df_K[rowSums(!is.na(df_K[names1])) > 4 & rowSums(!is.na(df_K[names2])) > 2, ]
 dim(data_K) #221956   
 summary(data_K$FAALGRUP_K)
@@ -496,7 +510,7 @@ summary(data_KA$FAALGRUP_KA)
 #160355  35403   1089   9261   5904   9944      0 
 colnames(data_K) #32
 
-#Ekipman Materyal degiskenini olusturma
+#Ekipman Materyal degiskenlerinin incelenmesi
 
 MAG_table = NULL
 MAG_table <- data.frame(KAZA_MAG=c(""),OZELFAA_MAG=c(""), YARAMAG=c(""), 
@@ -536,6 +550,7 @@ MAG_table
 #save(MAG_table, file = paste0("RObjects/selected_data_",c,"MAG_table.rdata"))
 xtable(t(MAG_table), type = "latex")
 
+#Ekipman Materyal değişkenlerinin bribiri ile tamamlanması
 data_K$KAZA_YARA_MAG_K <- data_K$YARAMAG_K
 data_K$KAZA_YARA_MAG_K[!is.na(data_K$KAZA_MAG_K)] = data_K$KAZA_MAG_K[!is.na(data_K$KAZA_MAG_K)]  # KAZA_MAG_Kdaki NA ları YARAMAG_K ile doldurdu
 data_K$YARA_KAZA_MAG_K <- data_K$KAZA_MAG_K
