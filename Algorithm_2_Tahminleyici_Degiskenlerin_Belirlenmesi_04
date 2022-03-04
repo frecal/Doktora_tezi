@@ -1,5 +1,20 @@
-## model seçimi için istatistiksel fark testleri
+#FUSUN RECAL DOKTORA TEZİ R KODLARI
+#Algorithm_2 Tahminleyici değişkenlerin belirlenmesi_03
 
+#İşlemler: En iyi performans gösteren modelin seçimi için istatistiksel fark testlerinin gerçekleştirilmesi ve en iyi modelin belirlenmesi
+
+#Girdi: "LC_model_table.rdata"
+        "LC_train_x_SG1_new.rdata", "LC_train_y_SG1_new.rdata", "LC_test_x_SG1_new.rdata", "LC_test_y_SG1_new.rdata", 
+        "LC_train_x_SG2_new.rdata", "LC_train_y_SG2_new.rdata", "LC_test_x_SG2_new.rdata", "LC_test_y_SG2_new.rdata", 
+        "LC_train_x_SG3_new.rdata", "LC_train_y_SG3_new.rdata", "LC_test_x_SG3_new.rdata", "LC_test_y_SG3_new.rdata", 
+        "LC_train_x_SG4_new.rdata", "LC_train_y_SG4_new.rdata", "LC_test_x_SG4_new.rdata", "LC_test_y_SG4_new.rdata"
+        "LC_gbm_down_SG1.rdata", "LC_gbm_Base_SG1.rdata", "LC_gbm_smote_SG1.rdata"
+        "LC_gbm_down_SG2.rdata", "LC_gbm_Base_SG2.rdata", "LC_gbm_smote_SG2.rdata"
+        "LC_gbm_down_SG3.rdata", "LC_gbm_Base_SG3.rdata", "LC_gbm_smote_SG3.rdata"
+        "LC_gbm_down_SG4.rdata", "LC_gbm_Base_SG4.rdata", "LC_gbm_smote_SG4.rdata"
+        
+ #Çıktı: "LC_bestModel_SG1.rdata", "LC_bestModel_SG2.rdata","LC_bestModel_SG3.rdata","LC_bestModel_SG4.rdata",
+        
 load(paste0("RObjects/",c,"_model_table.rdata"))
 model_table
 
@@ -9,21 +24,14 @@ print(xtable::xtable(x, type = "latex"), include.rownames=FALSE)
 write.table(x, file=paste0("RObjects/",c,"_SG_performances.xls"),quote = FALSE, sep = "\t", dec = ",",
             row.names = FALSE, col.names = TRUE)
 
-s <- 1
-s <- 2
-s <- 3
-s <- 4
+#s <- 1
+#s <- 2
+#s <- 3
+#s <- 4
 
 load(paste0("RObjects/",c,"_train_x_SG",s,".rdata")) 
 load(paste0("RObjects/",c,"_train_y_SG",s,".rdata")) 
 load(paste0("RObjects/",c,"_test_x_SG",s,".rdata")) 
-load(paste0("RObjects/",c,"_test_y_SG",s,".rdata"))
-
-load(paste0("RObjects/",c,"_train_x_final_SG",s,".rdata")) 
-load(paste0("RObjects/",c,"_test_x_final_SG",s,".rdata")) 
-train_x <- train_x_final
-test_x <- test_x_final
-load(paste0("RObjects/",c,"_train_y_SG",s,".rdata"))
 load(paste0("RObjects/",c,"_test_y_SG",s,".rdata"))
 
 load(paste0("RObjects/",c,"_model_gbm_Base_SG",s,".rdata"))
@@ -63,7 +71,6 @@ test_vec <- cbind (M_Base, M_down)
 test_vec <- cbind (M_smote, M_down)
 test_vec <- cbind (M_final, M_down)
 
-
 test_vec_df <- data.frame(test_vec)
 table(test_vec_df)
 t.test(test_vec_df[,1], test_vec_df[,2], paired =TRUE)
@@ -74,7 +81,6 @@ t.test(test_vec_df[,1], test_vec_df[,2], paired =TRUE)
 #we conclude that the effect size is small because it is less than 0.8.
 d= abs(mean( test_vec_df[,1])-mean ( test_vec_df[,2] ) ) / sqrt ( ( var ( test_vec_df[,1] )+var ( test_vec_df[,2] ) ) / 2 )
 d #0.000447637
-
 
 # MCNEMAR TEST
 
