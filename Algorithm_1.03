@@ -1,15 +1,12 @@
 #FUSUN RECAL DOKTORA TEZİ R KODLARI
-#Algorithm_1.01 Veri Hazırlama
+#Algorithm_1.03 Veri Hazırlama
 
 #İşlemler: numerik değişkenlerdeki eksik verinin tamamlanması
 
 #Girdi: "LC_data_K.rdata"
 #Çıktı: "LC_df.rdata"
 
-#Notlar:
-
-
-## MICE Algoritması ile numerik değişkenlerdeki eksik verinin tamamlanması ------------------------------------------------
+# MICE ALGORITMASI ILE NUMERIK DEĞIŞKENLERDEKI EKSIK VERININ TAMAMLANMASI ------------------------------------------------
 
 library(miceRanger)
 library(parallel)
@@ -39,7 +36,7 @@ parTime <- system.time(
 stopCluster(cl)
 registerDoSEQ()
 
-save(miceObjPar, file = paste0("RObjects/",c,"miceObjPar_new.rdata"))
+save(miceObjPar, file = paste0("RObjects/",c,"miceObjPar.rdata"))
 #load(paste0("RObjects/",c,"miceObjPar.rdata"))
 
 #addIterations(miceObjPar, iters = 7, parallel = FALSE, verbose = TRUE, returnModels = TRUE)
