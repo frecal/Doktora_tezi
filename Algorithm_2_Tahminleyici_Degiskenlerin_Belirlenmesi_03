@@ -1,27 +1,18 @@
 #FUSUN RECAL DOKTORA TEZİ R KODLARI
-#Algorithm_2 Tahminleyici değişkenlerin belirlenmesi_01
+#Algorithm_2 Tahminleyici değişkenlerin belirlenmesi_03
 
-#İşlemler: eğitim ve test verisetlerinin oluşturulması
+#İşlemler: Sınıflandırıcı modellerin belirlediği tahminleyici değişkenlerin tablolaştırılması
 
-save(Varsforrules, file = paste0("RObjects/",c,"_Varsforrules_SG",s,".rdata"))
-    write.table(Varsforrules, file=paste0("RObjects/",c,"_Variablesforrules_SG",s,".xls")
-                ,quote = FALSE, sep = "\t", dec = ",",
-                row.names = FALSE, col.names = TRUE, append = TRUE)
-
-#Girdi: "LC_trainSet_SG1_new.rdata", "LC_testSet_SG1_new.rdata", 
-        "LC_trainSet_SG2_new.rdata", "LC_testSet_SG2_new.rdata",
-        "LC_trainSet_SG3_new.rdata", "LC_testSet_SG3_new.rdata",
-        "LC_trainSet_SG4_new.rdata", "LC_testSet_SG4_new.rdata",
-        "LC_train_x_SG1_new.rdata", "LC_train_y_SG1_new.rdata", "LC_test_x_SG1_new.rdata", "LC_test_y_SG1_new.rdata", 
-        "LC_train_x_SG2_new.rdata", "LC_train_y_SG2_new.rdata", "LC_test_x_SG2_new.rdata", "LC_test_y_SG2_new.rdata", 
-        "LC_train_x_SG3_new.rdata", "LC_train_y_SG3_new.rdata", "LC_test_x_SG3_new.rdata", "LC_test_y_SG3_new.rdata", 
-        "LC_train_x_SG4_new.rdata", "LC_train_y_SG4_new.rdata", "LC_test_x_SG4_new.rdata", "LC_test_y_SG4_new.rdata"
-
+#Girdi: "LC_gbm_down_SG1.rdata", "LC_gbm_Base_SG1.rdata", "LC_gbm_smote_SG1.rdata"
+        "LC_gbm_down_SG2.rdata", "LC_gbm_Base_SG2.rdata", "LC_gbm_smote_SG2.rdata"
+        "LC_gbm_down_SG3.rdata", "LC_gbm_Base_SG3.rdata", "LC_gbm_smote_SG3.rdata"
+        "LC_gbm_down_SG4.rdata", "LC_gbm_Base_SG4.rdata", "LC_gbm_smote_SG4.rdata"
+        "LC_model_table.rdata"
+        
 #Çıktı: "LC_Varsforrules_SG1.rdata", "LC_Variablesforrules_SG1.xls"
         "LC_Varsforrules_SG2.rdata", "LC_Variablesforrules_SG2.xls"
         "LC_Varsforrules_SG3.rdata", "LC_Variablesforrules_SG3.xls"
         "LC_Varsforrules_SG4.rdata", "LC_Variablesforrules_SG4.xls"
-
 
 library(gbm)
 library(data.table)
@@ -45,7 +36,6 @@ for (s in 1:4){
     plot(varImp, top = 20)
     ggplot(varImp, top = 20)
     
-    
     varImp_df <- setDT(varImp$importance, keep.rownames = TRUE)[]
     varImp_df <- as.data.frame(varImp_df)
     varImp_df <- varImp_df[order(varImp_df$Overall, decreasing=TRUE),]
@@ -63,8 +53,6 @@ for (s in 1:4){
     
     varImp_df[varImp_df[,"perc"] > 0, ]
     Varsforrules<-varImp_df[varImp_df[,"perc"] > 0, ]
-    
-    
     
     Varsforrules[,"rn"]
     
