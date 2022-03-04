@@ -1,3 +1,11 @@
+#FUSUN RECAL DOKTORA TEZİ R KODLARI
+#Algorithm_1 Veri Hazırlama_05
+
+#İşlemler: Her bir ikili şiddet sınıfı için veri oluşturma
+
+#Girdi: "LC_df_dummy_NZV.rdata"
+#Çıktı: "LC_df_dummy_SG1_new.rdata", "LC_df_dummy_SG2_new.rdata", "LC_df_dummy_SG3_new.rdata", "LC_df_dummy_SG4_new.rdata"
+
 s <- 1 # Raporsuz/Raporlu
 load(paste0("RObjects/",c,"_df_dummy_NZV_new.rdata"))
 df_dummy$SIDDET <- cut(df_dummy$SG_ISGUNUKAYBI, breaks = c(0, 10, 7500), right = TRUE, include.lowest = TRUE) 
@@ -5,7 +13,7 @@ df_dummy$SIDDET <- recode(df_dummy$SIDDET, "[0,10]" = "Raporsuz", "(10,7.5e+03]"
 df_dummy <- subset(df_dummy, select= -c(SG_ISGUNUKAYBI))
 save(df_dummy, file = paste0("RObjects/",c,"_df_dummy_SG",s,"_new.rdata")) 
 
-s <- 2 # Raporsuz/Raporlu
+s <- 2 # Minör/Majör
 load(paste0("RObjects/",c,"_df_dummy_NZV_new.rdata"))
 df_dummy$SIDDET <- cut(df_dummy$SG_ISGUNUKAYBI, breaks = c(0, 20, 7500), right = TRUE, include.lowest = TRUE) 
 df_dummy$SIDDET <- recode(df_dummy$SIDDET, "[0,20]" = "Minor", "(20,7.5e+03]" = "Major")
@@ -27,4 +35,4 @@ df_dummy <- subset(df_dummy, select= -c(SG_ISGUNUKAYBI))
 save(df_dummy, file = paste0("RObjects/",c,"_df_dummy_SG",s,"_new.rdata")) 
 
 
-df_dummy %>% summarize_all(funs(sum(is.na(.)) / length(.)*100)) #K ve KA larin NA sayisi esitlenmis olmali
+
