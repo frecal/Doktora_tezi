@@ -1,4 +1,13 @@
-## NZV & Boruta & Dummy & Multicorr  ---------------------------------------------------------------------
+#FUSUN RECAL DOKTORA TEZİ R KODLARI
+#Algorithm_1 Veri Hazırlama_04
+
+#İşlemler: NZV, boruta, dummy, multicorr
+
+#Girdi: "LC_df.rdata"
+#Çıktı: "LC_df_dummy_NZV.rdata"
+
+#Notlar:
+
 
 load(paste0("RObjects/",c,"_df.rdata")) #df
 colnames (df)
