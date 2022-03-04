@@ -3,25 +3,22 @@
 
 #İşlemler: eğitim ve test verisetlerinin oluşturulması
 
-#Girdi: "LC_df_dummy_SG1_new.rdata", "LC_df_dummy_SG2_new.rdata", "LC_df_dummy_SG3_new.rdata", "LC_df_dummy_SG4_new.rdata"
-#Çıktı: "LC_trainSet_SG1_new.rdata", "LC_testSet_SG1_new.rdata", 
-        "LC_trainSet_SG2_new.rdata", "LC_testSet_SG2_new.rdata",
-        "LC_trainSet_SG3_new.rdata", "LC_testSet_SG3_new.rdata",
-        "LC_trainSet_SG4_new.rdata", "LC_testSet_SG4_new.rdata",
-        "LC_train_x_SG1_new.rdata", "LC_train_y_SG1_new.rdata", "LC_test_x_SG1_new.rdata", "LC_test_y_SG1_new.rdata", 
-        "LC_train_x_SG2_new.rdata", "LC_train_y_SG2_new.rdata", "LC_test_x_SG2_new.rdata", "LC_test_y_SG2_new.rdata", 
-        "LC_train_x_SG3_new.rdata", "LC_train_y_SG3_new.rdata", "LC_test_x_SG3_new.rdata", "LC_test_y_SG3_new.rdata", 
-        "LC_train_x_SG4_new.rdata", "LC_train_y_SG4_new.rdata", "LC_test_x_SG4_new.rdata", "LC_test_y_SG4_new.rdata"
-        
-       
+#Girdi: "LC_df_dummy_SG1.rdata", "LC_df_dummy_SG2.rdata", "LC_df_dummy_SG3.rdata", "LC_df_dummy_SG4.rdata"
+#Çıktı: "LC_trainSet_SG1.rdata", "LC_testSet_SG1.rdata", 
+#       "LC_trainSet_SG2.rdata", "LC_testSet_SG2.rdata",
+#       "LC_trainSet_SG3.rdata", "LC_testSet_SG3.rdata",
+#       "LC_trainSet_SG4.rdata", "LC_testSet_SG4.rdata",
+#       "LC_train_x_SG1.rdata", "LC_train_y_SG1.rdata", "LC_test_x_SG1.rdata", "LC_test_y_SG1.rdata", 
+#       "LC_train_x_SG2.rdata", "LC_train_y_SG2.rdata", "LC_test_x_SG2.rdata", "LC_test_y_SG2.rdata", 
+#       "LC_train_x_SG3.rdata", "LC_train_y_SG3.rdata", "LC_test_x_SG3.rdata", "LC_test_y_SG3.rdata", 
+#       "LC_train_x_SG4.rdata", "LC_train_y_SG4.rdata", "LC_test_x_SG4.rdata", "LC_test_y_SG4.rdata"
+
 for (s in 1:4){
-  
   load(paste0("RObjects/",c,"_df_dummy_SG",s,".rdata"))
-   
   trainSet <- head(df_dummy, n =round(0.8*dim(df_dummy)[1]))
   testSet <- tail(df_dummy, n =round(0.2*dim(df_dummy)[1]))
-  save(trainSet, file = paste0("RObjects/",c,"_trainSet_SG",s,"_new.rdata")) 
-  save(testSet, file = paste0("RObjects/",c,"_testSet_SG",s,"_new.rdata")) 
+  save(trainSet, file = paste0("RObjects/",c,"_trainSet_SG",s,".rdata")) 
+  save(testSet, file = paste0("RObjects/",c,"_testSet_SG",s,".rdata")) 
   summary(trainSet$SIDDET)
   
   if(s == 1){
@@ -36,11 +33,9 @@ for (s in 1:4){
         trainSet$SIDDET <- recode(trainSet$SIDDET, "OlumVar" = "pos", "OlumYok" = "neg")
       }
     }
-    
-  }
+      }
   summary(trainSet)
   summary(trainSet$SIDDET)
-  
   summary(testSet$SIDDET)
   
   if(s == 1){
@@ -55,10 +50,8 @@ for (s in 1:4){
         testSet$SIDDET <- recode(testSet$SIDDET, "OlumVar" = "pos", "OlumYok" = "neg")
       }
     }
-    
-  }
+      }
   levels <- c("YT_K", "YVY_K", "SIDDET")
-  
   reduced<-names(trainSet)[!names(trainSet)%in% levels]
   train_x <- trainSet[,reduced] 
   selected<-names(trainSet)[names(trainSet)%in% "SIDDET"]
@@ -67,14 +60,13 @@ for (s in 1:4){
   test_x <- testSet[,reduced] 
   selected<-names(testSet)[names(testSet)%in% "SIDDET"]
   test_y <- testSet[,selected] 
-  
   train_y <- factor(train_y, levels = c("pos","neg"))
   test_y <- factor(test_y, levels = c("pos","neg"))
   
-  save(train_x, file = paste0("RObjects/",c,"_train_x_SG",s,"_new.rdata")) 
-  save(train_y, file = paste0("RObjects/",c,"_train_y_SG",s,"_new.rdata")) 
-  save(test_x, file = paste0("RObjects/",c,"_test_x_SG",s,"_new.rdata")) 
-  save(test_y, file = paste0("RObjects/",c,"_test_y_SG",s,"_new.rdata"))
+  save(train_x, file = paste0("RObjects/",c,"_train_x_SG",s,".rdata")) 
+  save(train_y, file = paste0("RObjects/",c,"_train_y_SG",s,".rdata")) 
+  save(test_x, file = paste0("RObjects/",c,"_test_x_SG",s,".rdata")) 
+  save(test_y, file = paste0("RObjects/",c,"_test_y_SG",s,".rdata"))
   
   print(s)
   print(prop.table(table(train_y)))
