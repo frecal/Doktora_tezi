@@ -1,38 +1,35 @@
 #FUSUN RECAL DOKTORA TEZİ R KODLARI
-#Algorithm_1.01 Veri Hazırlama
+#Algorithm_1.05 Veri Hazırlama
 
 #İşlemler: Her bir ikili şiddet sınıfı için veri oluşturma
 
 #Girdi: "LC_df_dummy_NZV.rdata"
-#Çıktı: "LC_df_dummy_SG1_new.rdata", "LC_df_dummy_SG2_new.rdata", "LC_df_dummy_SG3_new.rdata", "LC_df_dummy_SG4_new.rdata"
+#Çıktı: "LC_df_dummy_SG1.rdata", "LC_df_dummy_SG2.rdata", "LC_df_dummy_SG3.rdata", "LC_df_dummy_SG4.rdata"
 
 s <- 1 # Raporsuz/Raporlu
-load(paste0("RObjects/",c,"_df_dummy_NZV_new.rdata"))
+load(paste0("RObjects/",c,"_df_dummy_NZV.rdata"))
 df_dummy$SIDDET <- cut(df_dummy$SG_ISGUNUKAYBI, breaks = c(0, 10, 7500), right = TRUE, include.lowest = TRUE) 
 df_dummy$SIDDET <- recode(df_dummy$SIDDET, "[0,10]" = "Raporsuz", "(10,7.5e+03]" = "Raporlu")
 df_dummy <- subset(df_dummy, select= -c(SG_ISGUNUKAYBI))
-save(df_dummy, file = paste0("RObjects/",c,"_df_dummy_SG",s,"_new.rdata")) 
+save(df_dummy, file = paste0("RObjects/",c,"_df_dummy_SG",s,".rdata")) 
 
 s <- 2 # Minör/Majör
-load(paste0("RObjects/",c,"_df_dummy_NZV_new.rdata"))
+load(paste0("RObjects/",c,"_df_dummy_NZV.rdata"))
 df_dummy$SIDDET <- cut(df_dummy$SG_ISGUNUKAYBI, breaks = c(0, 20, 7500), right = TRUE, include.lowest = TRUE) 
 df_dummy$SIDDET <- recode(df_dummy$SIDDET, "[0,20]" = "Minor", "(20,7.5e+03]" = "Major")
 df_dummy <- subset(df_dummy, select= -c(SG_ISGUNUKAYBI))
-save(df_dummy, file = paste0("RObjects/",c,"_df_dummy_SG",s,"_new.rdata")) 
+save(df_dummy, file = paste0("RObjects/",c,"_df_dummy_SG",s,".rdata")) 
 
 s <- 3 # KayipYok/KayipVar
-load(paste0("RObjects/",c,"_df_dummy_NZV_new.rdata"))
+load(paste0("RObjects/",c,"_df_dummy_NZV.rdata"))
 df_dummy$SIDDET <- cut(df_dummy$SG_ISGUNUKAYBI, breaks = c(0.09, 0, 7500), right = TRUE, include.lowest = TRUE) 
 df_dummy$SIDDET <- recode(df_dummy$SIDDET, "[0,0.09]" = "KayipYok", "(0.09,7.5e+03]" = "KayipVar")
 df_dummy <- subset(df_dummy, select= -c(SG_ISGUNUKAYBI))
-save(df_dummy, file = paste0("RObjects/",c,"_df_dummy_SG",s,"_new.rdata")) 
+save(df_dummy, file = paste0("RObjects/",c,"_df_dummy_SG",s,".rdata")) 
 
 s <- 4 # OlumYok/OlumVar
-load(paste0("RObjects/",c,"_df_dummy_NZV_new.rdata"))
+load(paste0("RObjects/",c,"_df_dummy_NZV.rdata"))
 df_dummy$SIDDET <- cut(df_dummy$SG_ISGUNUKAYBI, breaks = c(0, 7499.1, 7500), right = TRUE, include.lowest = TRUE) 
 df_dummy$SIDDET <- recode(df_dummy$SIDDET, "(7499,7500]" = "OlumVar", "[0,7499]" = "OlumYok")
 df_dummy <- subset(df_dummy, select= -c(SG_ISGUNUKAYBI))
-save(df_dummy, file = paste0("RObjects/",c,"_df_dummy_SG",s,"_new.rdata")) 
-
-
-
+save(df_dummy, file = paste0("RObjects/",c,"_df_dummy_SG",s,".rdata")) 
