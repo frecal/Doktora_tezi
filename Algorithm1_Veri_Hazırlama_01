@@ -1,5 +1,15 @@
 #FUSUN RECAL DOKTORA TEZİ R KODLARI
+#Algorithm_1 Veri Hazırlama_01 
+
+#İşlemler: Veri çekme, yeni değişkenler oluşturma, anlamsız veri kontrolü,  değişken formatı düzenleme, yeniden kodlama
+
+#Girdi: SQL veritabanı
+#Çıktı: "LC_raw_data.rdata"
+
+#Notlar:
 #SGK'dan alınan veri özel izine tabi olması sebebiyle paylaşılmamaktadır.
+
+
 
 # SGK'dan gelen verinin SQL veritabanından çekilmesi ---------------------------------------------------------------
 
@@ -604,8 +614,6 @@ summary(raw_data$SG_GOREVI_KOD_ACIKLAMA == ""
 summary(is.na(raw_data$SG_GOREVI_K))
 summary(raw_data$SG_GOREVI_KOD == "-1") #Bunlar NA olarak eklendi
 levels(raw_data$SG_GOREVI_K)
-
-# Siddet kategorisinin olusturulmasi --------------------------------------
 
 # Olumlu kazalara 7500 kayip gun yazilmasi
 str(raw_data)
