@@ -1,10 +1,34 @@
+#FUSUN RECAL DOKTORA TEZİ R KODLARI
+#Algorithm_2 Tahminleyici değişkenlerin belirlenmesi_01
+
+#İşlemler: eğitim ve test verisetlerinin oluşturulması
+
+save(Varsforrules, file = paste0("RObjects/",c,"_Varsforrules_SG",s,".rdata"))
+    write.table(Varsforrules, file=paste0("RObjects/",c,"_Variablesforrules_SG",s,".xls")
+                ,quote = FALSE, sep = "\t", dec = ",",
+                row.names = FALSE, col.names = TRUE, append = TRUE)
+
+#Girdi: "LC_trainSet_SG1_new.rdata", "LC_testSet_SG1_new.rdata", 
+        "LC_trainSet_SG2_new.rdata", "LC_testSet_SG2_new.rdata",
+        "LC_trainSet_SG3_new.rdata", "LC_testSet_SG3_new.rdata",
+        "LC_trainSet_SG4_new.rdata", "LC_testSet_SG4_new.rdata",
+        "LC_train_x_SG1_new.rdata", "LC_train_y_SG1_new.rdata", "LC_test_x_SG1_new.rdata", "LC_test_y_SG1_new.rdata", 
+        "LC_train_x_SG2_new.rdata", "LC_train_y_SG2_new.rdata", "LC_test_x_SG2_new.rdata", "LC_test_y_SG2_new.rdata", 
+        "LC_train_x_SG3_new.rdata", "LC_train_y_SG3_new.rdata", "LC_test_x_SG3_new.rdata", "LC_test_y_SG3_new.rdata", 
+        "LC_train_x_SG4_new.rdata", "LC_train_y_SG4_new.rdata", "LC_test_x_SG4_new.rdata", "LC_test_y_SG4_new.rdata"
+
+#Çıktı: "LC_Varsforrules_SG1.rdata", "LC_Variablesforrules_SG1.xls"
+        "LC_Varsforrules_SG2.rdata", "LC_Variablesforrules_SG2.xls"
+        "LC_Varsforrules_SG3.rdata", "LC_Variablesforrules_SG3.xls"
+        "LC_Varsforrules_SG4.rdata", "LC_Variablesforrules_SG4.xls"
+
+
 library(gbm)
 library(data.table)
 
 r <- c('gbm_Base')
 s<- 3
 load(paste0("RObjects/",c,"_model_table.rdata"))
-
 
 for (s in 1:4){
   
