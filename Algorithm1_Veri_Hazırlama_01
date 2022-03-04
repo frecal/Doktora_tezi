@@ -622,4 +622,5 @@ save(raw_data, file = "Objects/LC_raw_data.rdata")
 save(raw_data, file = "Objects/HC_raw_data.rdata")
 
 #Veride bulunan kategorik değişkenler Low Cardinality (LC) ve High Cardinality (HC) olmak üzere iki farklı şekilde yeniden kodlanmış ve ayrı veriler olarak kaydedilmiştir.
-#Tez çalışmasındaki uygulama Low Cardinality olarak kaydedilen veri ile gerçekleştirildiğinden bundan sonraki uygulamalarda" LC_raw_data.rdata" kullanılmıştır.
+#Tez çalışmasında iki veri ile de aynı denemeler yapıldığında LC ve HC bir değişken olarak (C) olarak belirlenmiştir.
+#Son uygulama Low Cardinality olarak belirlenmiştir. 
