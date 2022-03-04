@@ -1,13 +1,12 @@
+#FUSUN RECAL DOKTORA TEZİ R KODLARI
+#SGK'dan alınan veri özel izine tabi olması sebebiyle paylaşılmamaktadır.
 
-
-# SQL Fetch ---------------------------------------------------------------
+# SGK'dan gelen verinin SQL veritabanından çekilmesi ---------------------------------------------------------------
 
 library(odbc)
 sort(unique(odbcListDrivers()[[1]]))
-
 con <- dbConnect(odbc(), "db_R")
 dbListTables(con)
-
 result <- dbSendQuery(con, "SELECT [ISYERI_NACE]
       ,[ISYERI_NACE_ACIKLAMA]  ,[KAZA_KS_KOD_ACIKLAMA]
       ,[KAZA_MAG_KOD]
@@ -57,14 +56,9 @@ result <- dbSendQuery(con, "SELECT [ISYERI_NACE]
       ,[CC_KOD]
       ,[CC_KOD_ACIKLAMA] ,[SIGORTALI_SAYISI]
        FROM IS_KAZASI_VERILERI_21NISAN2019")
-
 fetch_data <- dbFetch(result)
 dim(fetch_data) #[1] 892552     57
-
 save(fetch_data, file = "Objects/fetch_data.rdata")
-load("Objects/fetch_data.rdata")
-str(fetch_data)
-colnames(fetch_data)
 raw_data <- fetch_data
 
 # Yeni degiskenlerin olusturulmasi--------------------------------------------------------
@@ -72,7 +66,7 @@ raw_data <- fetch_data
 library(lubridate)
 library(dplyr)
 
-#Convert date & hour & numeric features
+#Tarih saat ve sayısal tipteki değişkenlerin düzenlenmesi
 
 raw_data$SG_SONISGIR_TAR = as.character(raw_data$SG_SONISGIR_TAR)
 raw_data$SG_SONISGIR_TAR <- dmy(raw_data$SG_SONISGIR_TAR)
@@ -104,7 +98,6 @@ raw_data$SG_UCRETLIZINGUN = as.integer(raw_data$SG_UCRETLIZINGUN)
 raw_data$SG_ISGUNUKAYBI = as.integer(raw_data$SG_ISGUNUKAYBI)
 raw_data$SIGORTALI_SAYISI = as.integer(raw_data$SIGORTALI_SAYISI)
 
-
 summary(raw_data$SG_UCRETLIZINGUN)
 #   Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
 #  0.000   0.000   0.000   7.389  14.000 365.000 
@@ -115,7 +108,7 @@ summary(raw_data$SIGORTALI_SAYISI)
 # Min.  1st Qu.   Median     Mean  3rd Qu.     Max. 
 # 1.0      9.0     52.0    349.5    240.0 106580.0 
 
-# Kalan degiskenlerin factor e dönüstürlmesi
+# Kalan degiskenlerin faktöre dönüstürlmesi
 
 #con.names = ordered_data %>% select_if(is.numeric) %>% colnames()
 #cat.names = ordered_data %>% select_if(is.character) %>% colnames()
@@ -225,7 +218,6 @@ summary(raw_data$CALIS_SURE)
 # Anlamsiz verilerin NA olarak dönüştürülmesi --------------------------------------------------------
 #Kaza sonrasi ise baslayanlar
 dim(raw_data)
-
 dim(raw_data[raw_data$SG_SONIS_TEC < 0,])
 dim(subset(raw_data, !(SG_SONIS_TEC < 0)))
 dim(raw_data[raw_data$SG_TOP_TEC < 0,])
@@ -242,21 +234,13 @@ raw_data$CALIS_SURE[raw_data$CALIS_SURE< 0] <- ""
 raw_data$SG_SONIS_TEC = as.integer(raw_data$SG_SONIS_TEC)
 raw_data$SG_TOP_TEC = as.integer(raw_data$SG_TOP_TEC)
 raw_data$CALIS_SURE = as.integer(round(as.numeric(raw_data$CALIS_SURE)))
-str(raw_data)
 
-summary(raw_data$SG_SONIS_TEC)
-summary(raw_data$SG_TOP_TEC)
-summary(raw_data$CALIS_SURE)
+save(raw_data, file = "Objects/raw_data00.rdata")
 
-str(raw_data$CALIS_SURE)
-
-#save(raw_data, file = "Objects/raw_data00.rdata")
-
-
-# Latin1 formatına çevirme -------------------------------------------------------
+# Karakter içeren değişkenlerin Latin1 formatına çevirilmesi -------------------------------------------------------
 load("Objects/raw_data00.rdata")
-
 library(textclean)
+
 fac_cols <- names(select(raw_data,matches("ACIKLAMA")))
 fac_cols 
 for (i in 12:23){
@@ -269,7 +253,7 @@ str(raw_data[, fac_cols])
 str(raw_data)
 save(raw_data, file = "Objects/raw_data01.rdata")
 
-# Tekrar kodlama ----------------------------------------------------------------
+# Değişkenşlerin yeniden kodlanması ----------------------------------------------------------------
 
 load("Objects/raw_data01.rdata")
 str(raw_data)
@@ -389,7 +373,6 @@ summary(raw_data$GENELFAA_KOD_ACIKLAMA == ""
 summary(raw_data$GENELFAA_KOD_ACIKLAMA)
 summary(raw_data$GENELFAA_KA)
 
-
 #FAALGRUP
 recode=read.delim("RECODES/FAALGRUP.txt", header = TRUE, sep = "\t", fill = FALSE)
 oldvalues <- factor(recode$KOD)
@@ -449,7 +432,7 @@ summary(raw_data$YVY_KOD == "0"
         | raw_data$YVY_KOD == "99" 
         | raw_data$YVY_KOD == "-1") #Bunlar NA olarak eklendi
 
-#OGRENIM
+#OGR_DURUM
 recode=read.delim("RECODES/OGRENIM.txt", header = TRUE, sep = "\t", fill = FALSE)
 oldvalues <- factor(recode$KOD)
 newvalues <- factor(recode$YENIKOD)
@@ -635,403 +618,8 @@ head(raw_data$SG_ISGUNUKAYBI, n = 225)
 summary(raw_data$SG_ISGUNUKAYBI)
 summary(raw_data$SG_ISGUNUKAYBI)
 
-#save(raw_data, file = "Objects/raw_data02_LC.rdata")
-#save(raw_data, file = "Objects/raw_data02_HC.rdata")
-
-str(raw_data)
-summary(raw_data$FAALGRUP_K)
-summary(raw_data$FAALGRUP_KA)
-
-# Ordered_data ------------------------------------------------------------
-
-load("Objects/raw_data02_LC.rdata")
-load("Objects/raw_data02_HC.rdata")
-
-str(raw_data)
-colnames(raw_data[ , order(names(raw_data))])
-names <- order(names(raw_data))
-write.table(names, file="names.txt",quote = FALSE, sep = "\t", dec = ".",
-            row.names = FALSE, col.names = TRUE)
-
-
-selected_data <- subset(raw_data, select = c("FAALGRUP_K",
-                                             "FAALGRUP_KA",
-                                             "KAZA_GERYERBOLUM_K" , 
-                                            "KAZA_GERYERBOLUM_KA" , 
-                                            "KAZA_GERYER_K" , 
-                                            "KAZA_GERYER_KA" , 
-                                            "CO_K" , 
-                                            "CO_KA" , 
-                                            "CC_K" , 
-                                            "CC_KA" , 
-                                            "NACE_K" , 
-                                            "NACE_KA" , 
-                                            "SIGORTALI_SAYISI" , 
-                                            "KAZA_IL_K" , 
-                                            "KAZA_IL_KA" , 
-                                            "KAZA_TAR" , 
-                                            "KAZA_SAAT" , 
-                                            "SAAT_ARALIK" , 
-                                            "KAZA_AY" , 
-                                            "KAZA_YIL" , 
-                                            "KAZA_MEVSIM" , 
-                                            "KAZA_HGUN" , 
-                                            "SG_IGOR_K" , 
-                                            "SG_IGOR_KA" , 
-                                            "SG_IGORDURUM_K" , 
-                                            "SG_IGORDURUM_KA" , 
-                                            "YT_K" , 
-                                            "YT_KA" , 
-                                            "YVY_K" , 
-                                            "YVY_KA" , 
-                                            "KAZA_ACIKLAMA" , 
-                                            "SG_MESLEK_ISCO08_K" , 
-                                            "SG_MESLEK_ISCO08_KA" , 
-                                            "SG_GOREVI_K" , 
-                                            "SG_GOREVI_KA" , 
-                                            "SG_CINSIYET" , 
-                                            "MEDENIHAL_K" , 
-                                            "MEDENIHAL_KA" , 
-                                            "OGR_DURUM_K" , 
-                                            "OGR_DURUM_KA" , 
-                                            "SG_SONIS_TEC" , 
-                                            "SG_TOP_TEC" , 
-                                            "SG_YAS" , 
-                                            "SG_UCRETLIZINGUN" , 
-                                            "CALIS_SURE" , 
-                                            "KAZA_KS_K" , 
-                                            "GENELFAA_K" , 
-                                            "GENELFAA_KA" , 
-                                            "KAZA_MAG_K" , 
-                                            "KAZA_MAG_KA" , 
-                                            "OZELFAA_K" , 
-                                            "OZELFAA_KA" , 
-                                            "OZELFAA_MAG_K" , 
-                                            "OZELFAA_MAG_KA" , 
-                                            "YARAMAG_K" , 
-                                            "YARAMAG_KA" , 
-                                            "SG_KAZAGERORTAM_K" , 
-                                            "SG_KAZAGERORTAM_KA" , 
-                                            "YS_K" , 
-                                            "YS_KA",
-                                            "SG_ISGUNUKAYBI"  
-))
-
-
-x <- (subset(raw_data, (raw_data$FAALGRUP_K == '1')))
-y <- (subset(selected_data, (selected_data$SG_KAZAGERORTAM_KA == '1'| 
-                               selected_data$SG_KAZAGERORTAM_KA == '2'|
-                               selected_data$SG_KAZAGERORTAM_KA == '-1'|
-                               selected_data$SG_KAZAGERORTAM_KA == '202')))
-summary(x) # 814136
-dim(y) # 819523
-
-summary(selected_data$SG_KAZAGERORTAM_KA)
-summary(selected_data$SG_KAZAGERORTAM_K)
-
-# SG_KAZAGERORTAM_KA daha fazla veri verdigi için bunu seçiyoruz
-selected_data <- (subset(selected_data, (is.na(selected_data$SG_KAZAGERORTAM_KA) | 
-                                          selected_data$SG_KAZAGERORTAM_KA == '1' | 
-                                          selected_data$SG_KAZAGERORTAM_KA == '2'|
-                                           selected_data$SG_KAZAGERORTAM_KA == '-1'|
-                                           selected_data$SG_KAZAGERORTAM_KA == '202')))
-selected_data$SG_KAZAGERORTAM_KA <- factor(selected_data$SG_KAZAGERORTAM_KA)
-selected_data$SG_KAZAGERORTAM_K <- factor(selected_data$SG_KAZAGERORTAM_K)
-summary(selected_data$SG_KAZAGERORTAM_KA)
-summary(selected_data$SG_KAZAGERORTAM_K)
-
-
-# 999 ---------------------------------------------------------
-
-str(selected_data)
-
-selected_data %>% summarize_all(funs(sum(is.na(.)) / length(.)*100))
-
-# K da olmayip KA da olan eksik veriyi tamamlama
-selected_data$KAZA_IL_KA[!is.na(selected_data$KAZA_IL_K)] = selected_data$KAZA_IL_K[!is.na(selected_data$KAZA_IL_K)]  
-selected_data$KAZA_GERYER_KA[!is.na(selected_data$KAZA_GERYER_K)] = selected_data$KAZA_GERYER_K[!is.na(selected_data$KAZA_GERYER_K)]  
-selected_data$SG_IGOR_KA[!is.na(selected_data$SG_IGOR_K)] = selected_data$SG_IGOR_K[!is.na(selected_data$SG_IGOR_K)]
-
-#KA li kolonu olmadigi icin KAZA_KS_K yi bir sonraki adimdan ayri tutuyoruz
-levels(selected_data$KAZA_KS_K)
-selected_data$KAZA_KS_K = factor(selected_data$KAZA_KS_K, levels=c(levels(selected_data$KAZA_KS_K), 999)) 
-selected_data$KAZA_KS_K[is.na(selected_data$KAZA_KS_K)] = 999
-
-#Ekipman Materyal degiskenini olusturma
-selected_data$KAZA_MAG_K[!is.na(selected_data$YARAMAG_K)] = selected_data$YARAMAG_K[!is.na(selected_data$YARAMAG_K)]  # merge with YARAMAG_K
-selected_data$KAZA_MAG_K[!is.na(selected_data$OZELFAA_MAG_K)] = selected_data$OZELFAA_MAG_K[!is.na(selected_data$OZELFAA_MAG_K)]  # merge with OZELFAA_MAG_K
-selected_data$KAZA_MAG_K = selected_data$KAZA_MAG_KA  # your new merged column start with KAZA_MAG_K
-selected_data$KAZA_MAG_K[!is.na(selected_data$YARAMAG_KA)] = selected_data$YARAMAG_KA[!is.na(selected_data$YARAMAG_KA)]  # merge with YARAMAG_K
-selected_data$KAZA_MAG_K[!is.na(selected_data$OZELFAA_MAG_KA)] = selected_data$OZELFAA_MAG_KA[!is.na(selected_data$OZELFAA_MAG_KA)] 
-selected_data <- subset(selected_data, select= -c(YARAMAG_K, OZELFAA_MAG_K, YARAMAG_KA, OZELFAA_MAG_KA))
-
-#cEVRE degiskenini olusturma
-selected_data$CC_K[!is.na(selected_data$KAZA_GERYERBOLUM_K)] = selected_data$KAZA_GERYERBOLUM_K[!is.na(selected_data$KAZA_GERYERBOLUM_K)]  
-selected_data$CC_KA[!is.na(selected_data$KAZA_GERYERBOLUM_KA)] = selected_data$KAZA_GERYERBOLUM_KA[!is.na(selected_data$KAZA_GERYERBOLUM_KA)]
-
-summary(selected_data$KAZA_GERYERBOLUM_K)
-summary(selected_data$KAZA_GERYERBOLUM_KA)
-summary(selected_data$CC_K)
-summary(selected_data$CC_KA)
-
-selected_data <- subset(selected_data, select= -c(KAZA_GERYERBOLUM_K, KAZA_GERYERBOLUM_KA))
-
-#Görev degiskenini olusturma
-
-summary(selected_data$SG_GOREVI_K)
-summary(selected_data$SG_MESLEK_ISCO08_K)
-summary(selected_data$SG_GOREVI_KA)
-summary(selected_data$SG_MESLEK_ISCO08_KA)
-
-selected_data$SG_MESLEK_ISCO08_K[!is.na(selected_data$SG_GOREVI_K)] = selected_data$SG_GOREVI_K[!is.na(selected_data$SG_GOREVI_K)]  
-
-selected_data <- subset(selected_data, select= -c(SG_GOREVI_K, SG_GOREVI_KA))
-
-
-#K ve KA nin eksik verilerini birbiri ile tamamlama
-selected_data %>% summarize_all(funs(sum(is.na(.)) / length(.)*100))
-
-na_cols <- names(select_if(selected_data, funs(sum(is.na(.)) > 0)))
-fac_cols <- names(select_if(selected_data[,na_cols], is.factor)) 
-fac_cols #K KA K KA diye gittiginden emin olalim
-for (i in seq(1,30,2)){
-  selected_data[,fac_cols[i]][!is.na(selected_data[,fac_cols[i+1]])] = selected_data[,fac_cols[i+1]][!is.na(selected_data[,fac_cols[i+1]])]
-  selected_data[,fac_cols[i+1]][!is.na(selected_data[,fac_cols[i]])] = selected_data[,fac_cols[i]][!is.na(selected_data[,fac_cols[i]])]
-}
-selected_data %>% summarize_all(funs(sum(is.na(.)) / length(.)*100)) #K ve KA larin NA sayisi esitlenmis olmali
-
-
-#NA lari 999a donusturelim
-
-for (i in 1:30){
-  selected_data[,fac_cols[i]] = factor(selected_data[,fac_cols[i]], levels=c(levels(selected_data[,fac_cols[i]]), 999))
-  
-  selected_data[,fac_cols[i]][is.na(selected_data[,fac_cols[i]])] = 999
-}
-
-
-selected_data %>% summarize_all(funs(sum(is.na(.)) / length(.)*100))
-
-
-#save(raw_data, file = "Objects/selected_data_LC.rdata")
-#save(raw_data, file = "Objects/selected_data_HC.rdata")
-
-# Alt verilerin olusturulmasi ---------------------------------------------
-load("Objects/selected_data_LC.rdata")
-load("Objects/selected_data_HC.rdata")
-
-colnames(selected_data[ , order(names(selected_data))])
-names <- names(selected_data)
-write.table(names, file="names.txt",quote = FALSE, sep = "\t", dec = ".",
-            row.names = FALSE, col.names = TRUE)
-
-df_K <- subset(selected_data, select = c("FAALGRUP_K",
-                                         "NACE_K",
-                                          "SIGORTALI_SAYISI",
-                                          "KAZA_IL_K",
-                                          
-                                          "CC_K",
-                                          "SG_KAZAGERORTAM_K",
-                                          "CO_K",
-                                          
-                                          "GENELFAA_K",
-                                          "OZELFAA_K",
-                                          "KAZA_MAG_K",
-                                          "KAZA_KS_K",
-                                          "YS_K",
-                                          
-                                          "SG_GOREVI_K",
-                                          "SG_MESLEK_ISCO08_K",
-                                          "SG_CINSIYET",
-                                          "MEDENIHAL_K",
-                                          "OGR_DURUM_K",
-                                          "SG_SONIS_TEC",
-                                          "SG_TOP_TEC",
-                                          "SG_YAS",
-                                          "SG_UCRETLIZINGUN",
-                                          "CALIS_SURE",
-
-                                          "SAAT_ARALIK",
-                                          "KAZA_AY",
-                                          "KAZA_YIL",
-                                          "KAZA_MEVSIM",
-                                          "KAZA_HGUN",
-                                          "YT_K",
-                                          "YVY_K",
-                                          
-                                          "SG_ISGUNUKAYBI"))
-summary(selected_data$SG_CINSIYET)
-
-#save(df_K, file = "Objects/data_K_LC.rdata")
-load("Objects/data_K_LC.rdata")
-
-#save(df_K, file = "Objects/data_K_HC.rdata")
-load("Objects/data_K_HC.rdata")
-
-
-df_KA <- subset(selected_data, select = c("FAALGRUP_KA",
-                                          "NACE_KA",
-                                          "SIGORTALI_SAYISI",
-                                          "KAZA_IL_KA",
-                                          
-                                          "CC_KA",
-                                          "SG_KAZAGERORTAM_KA",
-                                          "CO_KA",
-                                          
-                                          "GENELFAA_KA",
-                                          "OZELFAA_KA",
-                                          "KAZA_MAG_KA",
-                                          "KAZA_KS_K",
-                                          "YS_KA",
-                                          
-                                          "SG_GOREVI_KA",
-                                          "SG_MESLEK_ISCO08_KA",
-                                          "SG_CINSIYET",
-                                          "MEDENIHAL_KA",
-                                          "OGR_DURUM_KA",
-                                          "SG_SONIS_TEC",
-                                          "SG_TOP_TEC",
-                                          "SG_YAS",
-                                          "SG_UCRETLIZINGUN",
-                                          "CALIS_SURE",
-                                          
-                                          "SAAT_ARALIK",
-                                          "KAZA_AY",
-                                          "KAZA_YIL",
-                                          "KAZA_MEVSIM",
-                                          "KAZA_HGUN",
-                                          "YT_KA",
-                                          "YVY_KA",
-                                          
-                                          "SG_ISGUNUKAYBI"))
-
-str(df_KA)
-
-#save(df_KA, file = "Objects/data_KA_LC.rdata")
-load("Objects/data_KA_LC.rdata")
-
-#save(df_KA, file = "Objects/data_KA_HC.rdata")
-load("Objects/data_KA_HC.rdata")
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-summary(df)
-
-
-
-summary(is.na(data_K))
-summary(is.na(data_KA))
-
-
-dim(data_KA) - dim(data_KA %>% filter_all(any_vars(is.na(.))))
-dim(data_K) - dim(data_K %>% filter_all(any_vars(is.na(.))))
-summary(is.na(data_KA))
-
-
-
-
-ordered_data$SIDDET <- recode(ordered_data$SIDDET, "KayipGunsuz" = "1", "Hafif" = "2", 
-                              "Orta" = "3", "Ciddi" = "4", "Ölümlü" = "5")
-
-#Kayip gunsuz/ hafif/ orta/ ciddi/ olumlu
-raw_data$SIDDET <- cut(raw_data$SG_ISGUNUKAYBI, breaks = c(0, 0.1, 3, 15, 7499, 7500), 
-                       right = TRUE, include.lowest = TRUE) #sonu basi hepsini include ediyomu diye check et
-raw_data$SIDDET <- recode(raw_data$SIDDET, "[0,0.1]" = "1", "(0.1,3]" = "2", 
-                          "(3,15]" = "3", "(15,7499]" = "4", "(7499,7500]" = "5")
-summary(as.factor(raw_data$SIDDET))
-
-str(raw_data)
-
-
-#raw_data$Severity <- cut(raw_data$LWD, breaks = c(0, 3.1, 7499, 7500), 
-#                      right = TRUE, include.lowest = TRUE) #sonu basi hepsini include ediyomu diye check et
-#raw_data$Severity <- recode(raw_data$Severity, "[0,3.1]" = "Minor", "(3.1,7499]" = "Major", 
-#                          "(7499,7500]" = "Fatal")
-#raw_data$SEV_three <- cut(raw_data$LWD, breaks = c(0, 15, 7499, 7500), 
-#                        right = TRUE, include.lowest = TRUE) #sonu basi hepsini include ediyomu diye check et
-#raw_data$SEV_three <- recode(raw_data$SEV_three,  "[0,15]" = "Minor", 
-#                           "(15,7499]" = "Major", "(7499,7500]" = "Fatal")
-
-df_K <- subset(data_K, select = c("FAALGRUP",
-                                  "NACE_K",
-                                  "KAZA_IL_K",
-                                  "SIGORTALI_SAYISI",
-                                  
-                                  "KAZA_GERYERBOLUM_K",     # CC ile ayni
-                                  "CC_K",
-                                  "KAZA_GERYER_K",          #isyerinde / isyeri disinda
-                                  "CO_K",                   #sabit isyeri / gecici isyeri
-                                  "SG_KAZAGERORTAM_K",      # 3, 4, 5, 6, 7 cikacak
-                                  
-                                  "KAZA_KS_K",
-                                  "GENELFAA_K",
-                                  "OZELFAA_K",
-                                  "OZELFAA_MAG_K", #KAZA_MAG_K ve YARAMAG_K ile ayni
-                                  "KAZA_MAG_K",
-                                  "YARAMAG_K",
-                                  "YS_K",          
-                                  
-                                  "SG_MESLEK_ISCO08_K", # "SG_GOREVI_K" ile ayni
-                                  "SG_GOREVI_K",
-                                  "SG_CINSIYET",
-                                  "MEDENIHAL_K",
-                                  "OGR_DURUM_K",
-                                  "SG_SONIS_TEC",
-                                  "SG_TOP_TEC",      
-                                  "SG_YAS",      
-                                  "SG_UCRETLIZINGUN",      
-                                  "CALIS_SURE",
-                                  
-                                  "SAAT_ARALIK",
-                                  "KAZA_AY",
-                                  "KAZA_MEVSIM",
-                                  "KAZA_HGUN",
-                                  
-                                  "YT_K",
-                                  "YVY_K",
-                                  "SG_ISGUNUKAYBI"))
-str(df_K)
-
-
-# Summary of Data ---------------------------------------------------------
-library(openxlsx)
-
-Sum_data <- as.data.frame(unclass(summary(raw_data, maxsum = 200)), check.names = FALSE, stringsAsFactors = FALSE)
-write.xlsx(Sum_data, 'Sum_data_K.xlsx')
-
-df_K <- unique(raw_data) # LC  satir sildi
-dim(df_K)
-
-
-
-#save(raw_data, file = "Objects/raw_data_02_LC.rdata")
-#load("Objects/raw_data_02_LC.rdata")
-
-#save(raw_data, file = "Objects/raw_data_02_HC.rdata")
-#load("Objects/raw_data_02_HC.rdata")
+save(raw_data, file = "Objects/raw_data_LC.rdata") 
+save(raw_data, file = "Objects/raw_data_HC.rdata")
+
+#Veride bulunan kategorik değişkenler Low Cardinality (LC) ve High Cardinality (HC) olmak üzere iki farklı şekilde yeniden kodlanmış ve ayrı veriler olarak kaydedilmiştir.
+#Tez çalışmasındaki uygulama Low Cardinality olarak kaydedilen veri ile gerçekleştirilmiştir.
