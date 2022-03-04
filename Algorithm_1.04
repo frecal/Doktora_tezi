@@ -1,42 +1,41 @@
 #FUSUN RECAL DOKTORA TEZİ R KODLARI
-#Algorithm_1.01 Veri Hazırlama
+#Algorithm_1.04 Veri Hazırlama
 
-#İşlemler: NZV, boruta, dummy, multicorr
+#İşlemler: 
+#Sifir Varyans Analizi
+#Boruta İle Değişken Seçimi
+#Yapay Değişken Oluştur
+#Yapay Değişkenlerle Sifir Varyans Analizi
+# Çoklu Korelasyon Testi
 
-#Girdi: "LC_df.rdata"
-#Çıktı: "LC_df_dummy_NZV.rdata"
+#Girdi: "LC_df.rdata",
+#Çıktı: "LC_df_reduced.rdata", "LC_boruta.rdata", "LC_df_bor.rdata", "LC_df_dummy.rdata", "LC_df_dummy_NZV.rdata"
 
-#Notlar:
-
-
+#SIFIR VARYANS ANALİZİ
 load(paste0("RObjects/",c,"_df.rdata")) #df
 colnames (df)
-
 df <- df[order(df$KAZA_TAR), ]
 df <- subset(df, select= -c(KAZA_TAR))
 str(df)
 colnames(df_reduced)
 colnames(df)
 drops <- c("FAALGRUP_K", "KAZA_YIL", "YT_K", "YVY_K")
-
 df_reduced <- df[ , !(names(df) %in% drops)]
-
 NZV<- nearZeroVar(df_reduced, saveMetrics = TRUE, freqCut=95/5,uniqueCut=10)
 NZV
 goodVars<-NZV[!NZV$zeroVar,]
 goodVarNames<-row.names(goodVars)
 df_reduced<-df_reduced[,goodVarNames] 
-save(df_reduced, file = paste0("RObjects/",c,"_df_reduced_new.rdata"))
-
+save(df_reduced, file = paste0("RObjects/",c,"_df_reduced.rdata"))
 load(paste0("RObjects/",c,"_df_reduced.rdata"))
 colnames(df_reduced)
 
+#BORUTA İLE DEĞİŞKEN SEÇİMİ
+
 boruta <- Boruta(SG_ISGUNUKAYBI~., data = df_reduced, doTrace = 2)
-save(boruta, file = paste0("RObjects/",c,"_boruta_new.rdata"))
+save(boruta, file = paste0("RObjects/",c,"_boruta.rdata"))
 load(paste0("RObjects/",c,"_boruta.rdata"))
 plot(boruta, names)
-
-
 plot(boruta, xlab = "", xaxt = "n")
 lz<-lapply(1:ncol(boruta$ImpHistory),function(i)
   boruta$ImpHistory[is.finite(boruta$ImpHistory[,i]),i])
@@ -44,47 +43,38 @@ names(lz) <- colnames(boruta$ImpHistory)
 Labels <- sort(sapply(lz,median))
 axis(side = 1,las=2,labels = names(Labels),
      at = 1:ncol(boruta$ImpHistory), cex.axis = 0.7)
-
-
 boruta_att <- as.data.frame(attStats(boruta))
 boruta_att
-
-
 goodAtt<-boruta_att[!boruta_att$decision=="Rejected",]
 goodAttNames<-row.names(goodAtt)
 df_bor<-df_reduced[,goodAttNames]
 df_bor$SG_ISGUNUKAYBI<-df_reduced$SG_ISGUNUKAYBI
-
 levels <- c("YT_K", "YVY_K")
 extras<-names(df)[names(df)%in% levels]
-
 for(i in names(df[,extras])){
-  
-  df_bor[[i]] <- df[[i]]
-  
-}
-
+    df_bor[[i]] <- df[[i]]
+  }
 summary(df_bor)
+save(df_bor, file = paste0("RObjects/",c,"_df_bor.rdata"))
 
-save(df_bor, file = paste0("RObjects/",c,"_df_bor_new.rdata"))
+#YAPAY DEĞİŞKEN OLUŞTURMA
 load(paste0("RObjects/",c,"_df_bor.rdata"))
 colnames(df_bor)
-
 colnames(df_reduced)
 drops <- c("YT_K", "YVY_K", "MEDENIHAL")
 dmy <- dummyVars(" ~ .", data = df_bor[ , !(names(df_bor) %in% drops)]) #dmy[["vars"]]
 df_dummy <- data.frame(predict(dmy, newdata = df_bor)) 
 summary(df_dummy)
-
 levels <- c("SIGORTALI_SAYISI", "SG_SONIS_TEC", "SG_TOP_TEC", "SG_YAS", "SG_UCRETLIZINGUN", "CALIS_SURE", "SG_ISGUNUKAYBI" )
 logicals<-names(df_dummy)[!names(df_dummy)%in% levels]
-
 for(i in names(df_dummy[,logicals])){
   df_dummy[[i]] <- as.factor(as.character(df_dummy[[i]]))   
 }
-save(df_dummy, file = paste0("RObjects/",c,"_df_dummy_new.rdata"))
+save(df_dummy, file = paste0("RObjects/",c,"_df_dummy.rdata"))
 load(paste0("RObjects/",c,"_df_dummy.rdata"))
 dim(df_dummy)
+
+#YAPAY DEĞİŞKENLERLE SIFIR VARYANS ANALİZİ
 
 NZV<- nearZeroVar(df_dummy, saveMetrics = TRUE, freqCut=95/5,uniqueCut=10)
 NZV
@@ -93,23 +83,17 @@ goodVarNames<-row.names(goodVars)
 df_dummy<-df_dummy[,goodVarNames] 
 levels <- c("YT_K", "YVY_K")
 extras<-names(df)[names(df)%in% levels]
-
 for(i in names(df[,extras])){
-  
-  df_dummy[[i]] <- df[[i]]
-  
-}
+    df_dummy[[i]] <- df[[i]]
+  }
 colnames(df_dummy)
-
 df_dummy <- subset(df_dummy, select= -c(MEDENIHAL_K.2))
-
 save(df_dummy, file = paste0("RObjects/",c,"_df_dummy_NZV.rdata"))
 
+# ÇOKLU KORELASYON TESTİ
 
-#Korelasyon testi sonucu değiştirmediği için analiz sonucunda veri güncellenmemiştir.
 load(paste0("RObjects/",c,"_df_dummy_NZV.rdata"))
 corr_df <- subset(df_dummy, select= -c(MEDENIHAL_K.2))
-
 corr <- cor(corr_df, method = "spearman")
 corr[lower.tri(corr,diag=TRUE)] <- NA #prepare to drop duplicates and correlations of 1  
 corr[corr == 1] <- NA #drop perfect correlations
@@ -117,17 +101,13 @@ corr <- as.data.frame(as.table(corr)) #turn into a 3-column table
 corr <- na.omit(corr) #remove the NA values from above 
 corr <- subset(corr, abs(Freq) > 0.90) #select significant values  
 corr <- corr[order(-abs(corr$Freq)),] #sort by highest correlation
-
 df<-df[!names(df)%in% corr$Var2]
-
 rownames(corr) = NULL
-
 sum_table_corr = NULL
 sum_table_corr <- data.frame(ŞiddetGrup=c(""), FaalGrup=c(""), 
                               var1=c(""), meanImp1=c(""),
                               var2=c(""), meanImp2=c(""), removed=c(""))
 n <- dim(corr)[1]
-
 for (i in 1:n){ 
   sum_table_corr[i,1] <- s
   sum_table_corr[i,2] <- g
@@ -146,3 +126,5 @@ for (i in 1:n){
   df<-df[!names(df)%in% rownames(z)]
 }
 print(sum_table_corr)
+
+#Korelasyon testi sonucu değiştirmediği için analiz sonucunda veri güncellenmemiştir.
