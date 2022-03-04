@@ -1,14 +1,20 @@
 #FUSUN RECAL DOKTORA TEZİ R KODLARI
-#Algorithm_1.01 Veri Hazırlama
+#Algorithm_1.02 Veri Hazırlama
 
-#İşlemler: Kategorik değişkenlerin eksik verisinde K ve KA eşleştirmeleri, kalan eksik verinin yeni bir kategori olarak tanımlanması, çok eksik veri bulunduran satırların silinmesi,
+# İşlemler: 
+# Yolda Gerçekleşen Kazalarin Veriden Çikarilmasi
+# Benzer Değişkenlerin Eşleştirilmesi (Cc & Kaza_Geryerbolum, Sg_Gorevi & Sg_Meslek_Isco08)
+# K Ve Ka Eşleştirmeleri
+# Seçilmiş Veriyi K Ve Ka Olarak Iki Ayri Veriye Ayirma
+# Eksik Veriye Sahip Kazalarin İncelenmesi Ve Filtrelenmesi
+# Kategorik Değişkenlerin Eksik Verisinin Kategori Olarak Tanimlanmasi
 
 #Girdi: "LC_raw_data.rdata"
-#Çıktı: "LC_data_K.rdata"
+#Çıktı: "LC_selected_data_MAG_table.rdata"
+#       "LC_data_K.rdata"
 
 #Notlar:
 #SGK'dan alınan veri Kod (K) ve Açıklama (A) olarak iki ayrı değişkenle betimlenmektedir. Ancak bazı eksik veriler ve tutarsızlıklar bulunmkatadır.
-
 
 library(dplyr)
 library(DataExplorer)
@@ -84,7 +90,7 @@ selected_data <- subset(raw_data, select = c("FAALGRUP_K",
                                              "YS_KA",
                                              "SG_ISGUNUKAYBI"))
 
-# eşleşme sonrası daha az NA verdiği için SG_KAZAGERORTAM_K seçilmiştir.
+# YOLDA GERÇEKLEŞEN KAZALARIN VERİDEN ÇIKARILMASI
 summary(selected_data$SG_KAZAGERORTAM_K)
 summary(selected_data$SG_KAZAGERORTAM_KA)
 selected_data$SG_KAZAGERORTAM_K[!is.na(selected_data$SG_KAZAGERORTAM_KA)] = selected_data$SG_KAZAGERORTAM_KA[!is.na(selected_data$SG_KAZAGERORTAM_KA)]  
@@ -100,8 +106,7 @@ introduce(selected_data)
 #     870429      61               53                  8                   0              8834712         69719           53096169
 
 
-
-#CC ve KAZA_GERYERBOLUM eşleştirilmesi
+#BENZER DEĞİŞKENLERİN EŞLEŞTİRİLMESİ (CC & KAZA_GERYERBOLUM, SG_GOREVI & SG_MESLEK_ISCO08)
 
 x <- "CC_K"
 y <- "CC_KA"
@@ -117,7 +122,6 @@ selected_data$K[!is.na(selected_data$KA)] = selected_data$KA[!is.na(selected_dat
 selected_data[,y] <- selected_data$K #K KA'nın değerlerine sahip
 summary(selected_data[,y]) #LC 203811
 
-
 x <- "KAZA_GERYERBOLUM_K"
 y <- "KAZA_GERYERBOLUM_KA"
 summary(selected_data[,x]) #LC 227572
@@ -131,7 +135,6 @@ summary(selected_data[,x]) #LC 212801
 selected_data$K[!is.na(selected_data$KA)] = selected_data$KA[!is.na(selected_data$KA)] #K'ya KA'yı yapıştırıyoruz
 selected_data[,y] <- selected_data$K #K KA'nın değerlerine sahip
 summary(selected_data[,y]) #LC 212801 
-
 
 x <- "CC_K"
 y <- "KAZA_GERYERBOLUM_K"
@@ -163,7 +166,6 @@ summary(selected_data[,y]) #181750
 selected_data <- subset(selected_data, select = -c(KAZA_GERYERBOLUM_K))
 selected_data <- subset(selected_data, select = -c(KAZA_GERYERBOLUM_KA))
 
-#SG_GOREVI ve SG_MESLEK_ISCO08 eşleştirilmesi
 x <- "SG_GOREVI_K"
 y <- "SG_GOREVI_KA"
 selected_data$K <- selected_data[,x]
@@ -222,7 +224,7 @@ summary(selected_data[,y]) #1051
 selected_data <- subset(selected_data, select = -c(SG_GOREVI_K))
 selected_data <- subset(selected_data, select = -c(SG_GOREVI_KA))
 
-# Eşlenince sıfırlanan değişkenler
+# K ve KA EŞLEŞTİRMELERİ
 
 x <- "KAZA_IL_K"
 y <- "KAZA_IL_KA"
@@ -280,8 +282,6 @@ colnames(selected_data)
 #[43] "GENELFAA_K"          "GENELFAA_KA"         "KAZA_MAG_K"          "KAZA_MAG_KA"         "OZELFAA_K"           "OZELFAA_KA"         
 #[49] "OZELFAA_MAG_K"       "OZELFAA_MAG_KA"      "YARAMAG_K"           "YARAMAG_KA"          "SG_KAZAGERORTAM_K"   "SG_KAZAGERORTAM_KA" 
 #[55] "YS_K"                "YS_KA"               "SG_ISGUNUKAYBI" 
-
-#K ve KA nin eksik verilerini birbiri ile tamamlama
 
 selected_data %>% summarize_all(funs(sum(is.na(.)) / length(.)*100))
 na_cols <- names(select_if(selected_data, funs(sum(is.na(.)) > 0)))
@@ -342,12 +342,12 @@ selected_data$FAALGRUP_KA = factor(selected_data$FAALGRUP_KA, levels=c(levels(se
 selected_data$FAALGRUP_KA[is.na(selected_data$FAALGRUP_KA)] = 7
 summary(selected_data$FAALGRUP_KA)
 
-save(selected_data, file = paste0("RObjects/",c,"selected_data_new.rdata"))
+save(selected_data, file = paste0("RObjects/",c,"selected_data.rdata"))
 
 
-## Seçilmiş veriyi K ve KA olarak iki ayrı veriye ayırma ---------------------------------
+# SEÇILMIŞ VERIYI K VE KA OLARAK IKI AYRI VERIYE AYIRMA ---------------------------------
 
-load(paste0("RObjects/",c,"selected_data_new.rdata"))
+load(paste0("RObjects/",c,"selected_data.rdata"))
 colnames(selected_data)
 df_K <- subset(selected_data, select = c("FAALGRUP_K",
                                          "NACE_K",
@@ -427,8 +427,7 @@ df_KA <- subset(selected_data, select = c("FAALGRUP_KA",
                                           "SG_ISGUNUKAYBI",
                                           "KAZA_ACIKLAMA"))
 
-
-#K ve KA verilerini inceleme ve analiz için daha çok bilgi taşıyan verinin seçimi ---------------------------------
+#EKSİK VERİYE SAHİP KAZALARIN İNCELENMESİ VE FİLTRELENMESİ
 
 introduce(df_K)
 introduce(df_KA)
@@ -547,7 +546,7 @@ MAG_table
 
 #   1   216055      198645  217124               169481              183181           179436                       156739
 #    97.34        89.5   97.82                76.36               82.53            80.84                        70.62
-#save(MAG_table, file = paste0("RObjects/selected_data_",c,"MAG_table.rdata"))
+#save(MAG_table, file = paste0("RObjects/",c,"_selected_data_MAG_table.rdata"))
 xtable(t(MAG_table), type = "latex")
 
 #Ekipman Materyal değişkenlerinin bribiri ile tamamlanması
@@ -567,7 +566,7 @@ summary(data_K)
 dim(data_K) #221956     
 summary(data_K$CC_K)
 
-#KAtegorik değişkenlerin eksik verisinin kategori olarak tanımlanması
+#KATEGORIK DEĞIŞKENLERIN EKSIK VERISININ KATEGORI OLARAK TANIMLANMASI
 
 data_K$CC_K = factor(data_K$CC_K, levels=c(levels(data_K$CC_K), 999))
 data_K$CC_K[is.na(data_K$CC_K)] = 999
@@ -638,7 +637,7 @@ summary(data_K$OZELFAA_MAG_K)
 summary(is.na(data_K))
 
 
-#KAza açıklama metin tipindeki değişkenin analizden çıkarılmadan önce tekrarlanan satır kontrolü için kullanılması
+#Kaza açıklama metin tipindeki değişkenin analizden çıkarılmadan önce tekrarlanan satır kontrolü için kullanılması
 
 dim(data_K) #221956         
 dim(unique(data_K)) #2219554
