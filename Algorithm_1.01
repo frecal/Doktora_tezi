@@ -1,17 +1,26 @@
 #FUSUN RECAL DOKTORA TEZİ R KODLARI
 #Algorithm_1.01 Veri Hazırlama
 
-#İşlemler: Veri çekme, yeni değişkenler oluşturma, anlamsız veri kontrolü,  değişken formatı düzenleme, yeniden kodlama
+#İşlemler: 
+# Sgk'dan Gelen Verinin Sql Veritabanindan Çekilmesi
+# Tarih Saat Ve Sayisal Tipteki Değişkenlerin Düzenlenmesi
+# Kategorik Degiskenlerin Faktöre Dönüstürülmesi
+# Yeni Degiskenlerin Olusturulmasi Kaza_Yil Saat Kaza_Ay Mevsim Kaza_Hgun Sg_Sonis_Tec Sg_Top_Tec Sg_Yas
+# Anlamsiz Verilerin Na Olarak Dönüştürülmesi
+# Karakter Içeren Değişkenlerin Latin1 Formatina Çevirilmesi
+# Değişkenlerin Yeniden Kodlanmasi
+# Olumlu Kazalara 7500 Kayip Gun Yazilmasi
 
 #Girdi: SQL veritabanı
 #Çıktı: "LC_raw_data.rdata"
 
 #Notlar:
-#SGK'dan alınan veri özel izine tabi olması sebebiyle paylaşılmamaktadır.
+#SGK'dan alınan veri özel izine tabi olması sebebiyle "Object" klasöründe bulunan objeler ve verisetleri talep üzerine paylaşılacaktır. 
+#Talebinizi fusunrecal@gmail adresine iletebilirsiniz.
 
+setwd("C:/Users/resit/OneDrive/Doktora/Tez Verileri/GitHub")
 
-
-# SGK'dan gelen verinin SQL veritabanından çekilmesi ---------------------------------------------------------------
+# SGK'DAN GELEN VERININ SQL VERITABANINDAN ÇEKILMESI ---------------------------------------------------------------
 
 library(odbc)
 sort(unique(odbcListDrivers()[[1]]))
@@ -71,12 +80,10 @@ dim(fetch_data) #[1] 892552     57
 save(fetch_data, file = "Objects/fetch_data.rdata")
 raw_data <- fetch_data
 
-# Yeni degiskenlerin olusturulmasi--------------------------------------------------------
-
 library(lubridate)
 library(dplyr)
 
-#Tarih saat ve sayısal tipteki değişkenlerin düzenlenmesi
+#TARIH SAAT VE SAYISAL TIPTEKI DEĞIŞKENLERIN DÜZENLENMESI
 
 raw_data$SG_SONISGIR_TAR = as.character(raw_data$SG_SONISGIR_TAR)
 raw_data$SG_SONISGIR_TAR <- dmy(raw_data$SG_SONISGIR_TAR)
@@ -118,7 +125,7 @@ summary(raw_data$SIGORTALI_SAYISI)
 # Min.  1st Qu.   Median     Mean  3rd Qu.     Max. 
 # 1.0      9.0     52.0    349.5    240.0 106580.0 
 
-# Kalan degiskenlerin faktöre dönüstürlmesi
+# KATEGORIK DEGISKENLERIN FAKTÖRE DÖNÜSTÜRÜLMESI
 
 #con.names = ordered_data %>% select_if(is.numeric) %>% colnames()
 #cat.names = ordered_data %>% select_if(is.character) %>% colnames()
@@ -132,7 +139,7 @@ cat.names
 raw_data[,cat.names] <- lapply(raw_data[,cat.names] , factor)
 str(raw_data)
 
-# Yeni degiskenlerin olusturulmasi KAZA_YIL SAAT KAZA_AY MEVSIM KAZA_HGUN SG_SONIS_TEC SG_TOP_TEC SG_YAS----------------------------------------
+# YENI DEGISKENLERIN OLUSTURULMASI KAZA_YIL SAAT KAZA_AY MEVSIM KAZA_HGUN SG_SONIS_TEC SG_TOP_TEC SG_YAS--------------------------------------------------------
 
 raw_data$KAZA_YIL <- year(raw_data$KAZA_TAR)
 raw_data$KAZA_YIL = as.factor(raw_data$KAZA_YIL)
@@ -225,7 +232,7 @@ raw_data$CALIS_SURE <- raw_data$KAZA_SAAT-raw_data$KAZAGUNISBASISAAT
 class(raw_data$CALIS_SURE)
 summary(raw_data$CALIS_SURE)
 
-# Anlamsiz verilerin NA olarak dönüştürülmesi --------------------------------------------------------
+# ANLAMSIZ VERILERIN NA OLARAK DÖNÜŞTÜRÜLMESI--------------------------------------------------------
 #Kaza sonrasi ise baslayanlar
 dim(raw_data)
 dim(raw_data[raw_data$SG_SONIS_TEC < 0,])
@@ -247,7 +254,7 @@ raw_data$CALIS_SURE = as.integer(round(as.numeric(raw_data$CALIS_SURE)))
 
 save(raw_data, file = "Objects/raw_data00.rdata")
 
-# Karakter içeren değişkenlerin Latin1 formatına çevirilmesi -------------------------------------------------------
+# KARAKTER IÇEREN DEĞIŞKENLERIN LATIN1 FORMATINA ÇEVIRILMESI -------------------------------------------------------
 load("Objects/raw_data00.rdata")
 library(textclean)
 
@@ -263,7 +270,7 @@ str(raw_data[, fac_cols])
 str(raw_data)
 save(raw_data, file = "Objects/raw_data01.rdata")
 
-# Değişkenşlerin yeniden kodlanması ----------------------------------------------------------------
+# DEĞIŞKENLERIN YENIDEN KODLANMASI----------------------------------------------------------------
 
 load("Objects/raw_data01.rdata")
 str(raw_data)
@@ -615,7 +622,7 @@ summary(is.na(raw_data$SG_GOREVI_K))
 summary(raw_data$SG_GOREVI_KOD == "-1") #Bunlar NA olarak eklendi
 levels(raw_data$SG_GOREVI_K)
 
-# Olumlu kazalara 7500 kayip gun yazilmasi
+# OLUMLU KAZALARA 7500 KAYIP GUN YAZILMASI
 str(raw_data)
 summary(is.na(raw_data))
 
