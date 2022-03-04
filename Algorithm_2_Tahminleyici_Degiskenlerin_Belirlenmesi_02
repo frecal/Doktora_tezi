@@ -1,3 +1,19 @@
+#FUSUN RECAL DOKTORA TEZİ R KODLARI
+#Algorithm_2 Tahminleyici değişkenlerin belirlenmesi_02
+
+#İşlemler: Tüm ikili sınıflandırma verisetlerinin gbm algoritmasıyla 3 farklı dengeleme yöntemi kullanılarak sınıflandırılması
+
+#Girdi: "LC_train_x_SG1_new.rdata", "LC_train_y_SG1_new.rdata", "LC_test_x_SG1_new.rdata", "LC_test_y_SG1_new.rdata", 
+        "LC_train_x_SG2_new.rdata", "LC_train_y_SG2_new.rdata", "LC_test_x_SG2_new.rdata", "LC_test_y_SG2_new.rdata", 
+        "LC_train_x_SG3_new.rdata", "LC_train_y_SG3_new.rdata", "LC_test_x_SG3_new.rdata", "LC_test_y_SG3_new.rdata", 
+        "LC_train_x_SG4_new.rdata", "LC_train_y_SG4_new.rdata", "LC_test_x_SG4_new.rdata", "LC_test_y_SG4_new.rdata"
+
+#Çıktı: "LC_gbm_down_SG1.rdata", "LC_gbm_Base_SG1.rdata", "LC_gbm_smote_SG1.rdata"
+        "LC_gbm_down_SG2.rdata", "LC_gbm_Base_SG2.rdata", "LC_gbm_smote_SG2.rdata"
+        "LC_gbm_down_SG3.rdata", "LC_gbm_Base_SG3.rdata", "LC_gbm_smote_SG3.rdata"
+        "LC_gbm_down_SG4.rdata", "LC_gbm_Base_SG4.rdata", "LC_gbm_smote_SG4.rdata"
+        "LC_model_table.rdata", "LC_model_table.xls"
+
 library(caret)
 library(parallel)
 library(doParallel)
@@ -10,13 +26,6 @@ summary(train_y)
 seed <- 3456
 #cl <- makeCluster(detectCores())
 #registerDoParallel(cl)
-
-
-load(paste0("RObjects/",c,"_train_x_final_SG",s,".rdata")) 
-load(paste0("RObjects/",c,"_test_x_final_SG",s,".rdata")) 
-
-train_x <- train_x_final
-test_x <- test_x_final
 
 colnames(train_x)
 colnames(test_x)
@@ -46,17 +55,6 @@ save(model, file = paste0("RObjects/",c,"_model_gbm_Base_SG",s,".rdata"))
 #load(paste0("RObjects/",c,"_gbm_Base_SG",s,".rdata"))
 #load(paste0("RObjects/",c,"_model_gbm_Base_SG",s,".rdata"))
 caret::confusionMatrix(predict(gbm_Base, test_x), test_y)
-
-svm_Base <- train(train_x, train_y, 
-                  method="svmLinear", 
-                  metric="ROC", 
-                  maximize = TRUE,
-                  preProcess = c("nzv","center", "scale"),
-                  trControl = control,
-                  verbose = TRUE)
-save(svm_Base, file = paste0("RObjects/",c,"_svm_Base_SG",s,".rdata"))
-
-
 
 ## Down sampling ----------------------------------------------------------------
 
