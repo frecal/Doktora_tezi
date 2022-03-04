@@ -618,8 +618,8 @@ head(raw_data$SG_ISGUNUKAYBI, n = 225)
 summary(raw_data$SG_ISGUNUKAYBI)
 summary(raw_data$SG_ISGUNUKAYBI)
 
-save(raw_data, file = "Objects/raw_data_LC.rdata") 
-save(raw_data, file = "Objects/raw_data_HC.rdata")
+save(raw_data, file = "Objects/LC_raw_data.rdata") 
+save(raw_data, file = "Objects/HC_raw_data.rdata")
 
 #Veride bulunan kategorik değişkenler Low Cardinality (LC) ve High Cardinality (HC) olmak üzere iki farklı şekilde yeniden kodlanmış ve ayrı veriler olarak kaydedilmiştir.
-#Tez çalışmasındaki uygulama Low Cardinality olarak kaydedilen veri ile gerçekleştirilmiştir.
+#Tez çalışmasındaki uygulama Low Cardinality olarak kaydedilen veri ile gerçekleştirildiğinden bundan sonraki uygulamalarda" LC_raw_data.rdata" kullanılmıştır.
