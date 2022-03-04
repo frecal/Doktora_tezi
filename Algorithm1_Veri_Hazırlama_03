@@ -1,4 +1,13 @@
 #FUSUN RECAL DOKTORA TEZİ R KODLARI
+#Algorithm_1 Veri Hazırlama_03
+
+#İşlemler: numerik değişkenlerdeki eksik verinin tamamlanması
+
+#Girdi: "LC_data_K.rdata"
+#Çıktı: "LC_df.rdata"
+
+#Notlar:
+
 
 ## MICE Algoritması ile numerik değişkenlerdeki eksik verinin tamamlanması ------------------------------------------------
 
@@ -65,6 +74,6 @@ data_K$FAALGRUP_K <- factor(data_K$FAALGRUP_K)
 
 df <- data_K
 
-save(df, file = paste0("RObjects/",c,"df_new.rdata"))
+save(df, file = paste0("RObjects/",c,"df.rdata"))
 
 
