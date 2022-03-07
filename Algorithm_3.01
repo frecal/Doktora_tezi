@@ -2,35 +2,35 @@
 #Algorithm_3.01 Dolaylı Etkili Degiskenleri Içeren Kuralların Olusturulması
 
 #İşlemler: Birliktelik Kurallarında kullanılacak sadece güçlü tahminleyici değişkenlerden oluşan verisetinin oluşturulması,
-           "YT_K", "YVY_K", "SIDDET" değişkenlerinin eklenmesi ve numerik değişkenlerin kategorilere bölünmesi
-           Dolaylı Etkili Degiskenleri Içeren Kuralların Olusturulması ve Filtrelenmesi
-           Kuralların birleştirilmesi
-           Örnek Sorgu
+#           "YT_K", "YVY_K", "SIDDET" değişkenlerinin eklenmesi ve numerik değişkenlerin kategorilere bölünmesi
+#           Dolaylı Etkili Degiskenleri Içeren Kuralların Olusturulması ve Filtrelenmesi
+#           Kuralların birleştirilmesi
+#           Örnek Sorgu
            
 
 #Girdi: "LC_bestModel_SG1.rdata", "LC_bestModel_SG2.rdata","LC_bestModel_SG3.rdata","LC_bestModel_SG4.rdata"
-        "LC_trainSet_SG1_new.rdata", "LC_testSet_SG1_new.rdata", 
-        "LC_trainSet_SG2_new.rdata", "LC_testSet_SG2_new.rdata",
-        "LC_trainSet_SG3_new.rdata", "LC_testSet_SG3_new.rdata",
-        "LC_trainSet_SG4_new.rdata", "LC_testSet_SG4_new.rdata",
-        "LC_train_x_SG1_new.rdata", "LC_train_y_SG1_new.rdata", "LC_test_x_SG1_new.rdata", "LC_test_y_SG1_new.rdata", 
-        "LC_train_x_SG2_new.rdata", "LC_train_y_SG2_new.rdata", "LC_test_x_SG2_new.rdata", "LC_test_y_SG2_new.rdata", 
-        "LC_train_x_SG3_new.rdata", "LC_train_y_SG3_new.rdata", "LC_test_x_SG3_new.rdata", "LC_test_y_SG3_new.rdata", 
-        "LC_train_x_SG4_new.rdata", "LC_train_y_SG4_new.rdata", "LC_test_x_SG4_new.rdata", "LC_test_y_SG4_new.rdata"
-        "LC_Varsforrules_SG1.rdata", "LC_Variablesforrules_SG1.xls"
-        "LC_Varsforrules_SG2.rdata", "LC_Variablesforrules_SG2.xls"
-        "LC_Varsforrules_SG3.rdata", "LC_Variablesforrules_SG3.xls"
-        "LC_Varsforrules_SG4.rdata", "LC_Variablesforrules_SG4.xls"
-        "LC_model_table.rdata"
+#        "LC_trainSet_SG1_new.rdata", "LC_testSet_SG1_new.rdata", 
+#        "LC_trainSet_SG2_new.rdata", "LC_testSet_SG2_new.rdata",
+#        "LC_trainSet_SG3_new.rdata", "LC_testSet_SG3_new.rdata",
+#        "LC_trainSet_SG4_new.rdata", "LC_testSet_SG4_new.rdata",
+#        "LC_train_x_SG1_new.rdata", "LC_train_y_SG1_new.rdata", "LC_test_x_SG1_new.rdata", "LC_test_y_SG1_new.rdata", 
+#        "LC_train_x_SG2_new.rdata", "LC_train_y_SG2_new.rdata", "LC_test_x_SG2_new.rdata", "LC_test_y_SG2_new.rdata", 
+#        "LC_train_x_SG3_new.rdata", "LC_train_y_SG3_new.rdata", "LC_test_x_SG3_new.rdata", "LC_test_y_SG3_new.rdata", 
+#        "LC_train_x_SG4_new.rdata", "LC_train_y_SG4_new.rdata", "LC_test_x_SG4_new.rdata", "LC_test_y_SG4_new.rdata"
+#        "LC_Varsforrules_SG1.rdata", "LC_Variablesforrules_SG1.xls"
+#        "LC_Varsforrules_SG2.rdata", "LC_Variablesforrules_SG2.xls"
+#        "LC_Varsforrules_SG3.rdata", "LC_Variablesforrules_SG3.xls"
+#        "LC_Varsforrules_SG4.rdata", "LC_Variablesforrules_SG4.xls"
+#        "LC_model_table.rdata"
         
- #Çıktı: "LC_train_x_final_SG1.rdata", "LC_test_x_final_SG1.rdata" 
-         "LC_train_x_final_SG2.rdata", "LC_test_x_final_SG2.rdata" 
-         "LC_train_x_final_SG3.rdata", "LC_test_x_final_SG3.rdata" 
-         "LC_train_x_final_SG4.rdata", "LC_test_x_final_SG4.rdata"
-         "LC_df_rules_SG1.rdata", "LC_df_rules_SG2.rdata", "LC_df_rules_SG3.rdata", "LC_df_rules_SG4.rdata"
-         "LC_interesting_rules_apriori_SG1.rdata", "LC_interesting_rules_apriori_SG2.rdata", "LC_interesting_rules_apriori_SG3.rdata", "LC_interesting_rules_apriori_SG4.rdata"
-         "LC_interesting_rules_SG1.xls", "LC_interesting_rules_SG2.xls", "LC_interesting_rules_SG3.xls", "LC_interesting_rules_SG4.xls"
-         "LC_yeni_kaza.xls"
+#Çıktı: "LC_train_x_final_SG1.rdata", "LC_test_x_final_SG1.rdata" 
+#         "LC_train_x_final_SG2.rdata", "LC_test_x_final_SG2.rdata" 
+#         "LC_train_x_final_SG3.rdata", "LC_test_x_final_SG3.rdata" 
+#         "LC_train_x_final_SG4.rdata", "LC_test_x_final_SG4.rdata"
+#         "LC_df_rules_SG1.rdata", "LC_df_rules_SG2.rdata", "LC_df_rules_SG3.rdata", "LC_df_rules_SG4.rdata"
+#         "LC_interesting_rules_apriori_SG1.rdata", "LC_interesting_rules_apriori_SG2.rdata", "LC_interesting_rules_apriori_SG3.rdata", "LC_interesting_rules_apriori_SG4.rdata"
+#         "LC_interesting_rules_SG1.xls", "LC_interesting_rules_SG2.xls", "LC_interesting_rules_SG3.xls", "LC_interesting_rules_SG4.xls"
+#         "LC_yeni_kaza.xls"
  
 ## BIRLIKTELIK KURALLARINDA KULLANILACAK SADECE GÜÇLÜ TAHMINLEYICI DEĞIŞKENLERDEN OLUŞAN VERISETININ OLUŞTURULMASI ----------------------------------------------------  
 for (s in 1:4){
