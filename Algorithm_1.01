@@ -15,7 +15,7 @@
 #Çıktı: "LC_raw_data.rdata"
 
 #Notlar:
-#SGK'dan alınan veri özel izine tabi olması sebebiyle "Object" klasöründe bulunan objeler ve verisetleri talep üzerine paylaşılacaktır. 
+#SGK'dan alınan veri özel izine tabi olması sebebiyle "RObjects" klasöründe bulunan objeler ve verisetleri talep üzerine paylaşılacaktır. 
 #Talebinizi fusunrecal@gmail adresine iletebilirsiniz.
 
 setwd("C:/Users/resit/OneDrive/Doktora/Tez Verileri/GitHub")
@@ -77,7 +77,7 @@ result <- dbSendQuery(con, "SELECT [ISYERI_NACE]
        FROM IS_KAZASI_VERILERI_21NISAN2019")
 fetch_data <- dbFetch(result)
 dim(fetch_data) #[1] 892552     57
-save(fetch_data, file = "Objects/fetch_data.rdata")
+save(fetch_data, file = "RObjects/fetch_data.rdata")
 raw_data <- fetch_data
 
 library(lubridate)
@@ -252,10 +252,10 @@ raw_data$SG_SONIS_TEC = as.integer(raw_data$SG_SONIS_TEC)
 raw_data$SG_TOP_TEC = as.integer(raw_data$SG_TOP_TEC)
 raw_data$CALIS_SURE = as.integer(round(as.numeric(raw_data$CALIS_SURE)))
 
-save(raw_data, file = "Objects/raw_data00.rdata")
+save(raw_data, file = "RObjects/raw_data00.rdata")
 
 # KARAKTER IÇEREN DEĞIŞKENLERIN LATIN1 FORMATINA ÇEVIRILMESI -------------------------------------------------------
-load("Objects/raw_data00.rdata")
+load("RObjects/raw_data00.rdata")
 library(textclean)
 
 fac_cols <- names(select(raw_data,matches("ACIKLAMA")))
@@ -268,11 +268,11 @@ for (i in 12:23){
 }
 str(raw_data[, fac_cols])
 str(raw_data)
-save(raw_data, file = "Objects/raw_data01.rdata")
+save(raw_data, file = "RObjects/raw_data01.rdata")
 
 # DEĞIŞKENLERIN YENIDEN KODLANMASI----------------------------------------------------------------
 
-load("Objects/raw_data01.rdata")
+load("RObjects/raw_data01.rdata")
 str(raw_data)
 
 #NACE
@@ -633,8 +633,8 @@ head(raw_data$SG_ISGUNUKAYBI, n = 225)
 summary(raw_data$SG_ISGUNUKAYBI)
 summary(raw_data$SG_ISGUNUKAYBI)
 
-save(raw_data, file = "Objects/LC_raw_data.rdata") 
-save(raw_data, file = "Objects/HC_raw_data.rdata")
+save(raw_data, file = "RObjects/LC_raw_data.rdata") 
+save(raw_data, file = "RObjects/HC_raw_data.rdata")
 
 #Veride bulunan kategorik değişkenler Low Cardinality (LC) ve High Cardinality (HC) olmak üzere iki farklı şekilde yeniden kodlanmış ve ayrı veriler olarak kaydedilmiştir.
 #Tez çalışmasında iki veri ile de aynı denemeler yapıldığında LC ve HC bir değişken olarak (C) olarak belirlenmiştir.
